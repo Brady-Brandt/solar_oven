@@ -12,6 +12,8 @@ add_executable(solar_oven
     src/display.c
 )
 
+target_include_directories(solar_oven PRIVATE fonts/)
+
 pico_enable_stdio_usb(solar_oven 1)
 
 pico_enable_stdio_uart(solar_oven 1)

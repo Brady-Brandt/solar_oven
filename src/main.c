@@ -1,18 +1,10 @@
 #include <pico/time.h>
 #include <stdint.h>
-#include <stdio.h>
 #include "display.h"
 #include "pico/stdlib.h"
 #include "hardware/gpio.h"
-#include "hardware/spi.h"
 
 const uint LED_PIN = 16;
-
-
-typedef uint8_t RGB666[3];
-
-#define RGB_TO_RGB666(red,green,blue) {(red * 63/ 255) << 2, (green * 63/ 255) << 2, (blue * 63/ 255) << 2} 
-
 
 int main() {
 
@@ -21,22 +13,16 @@ int main() {
     gpio_set_dir(LED_PIN, GPIO_OUT);
     display_init();
 
-     
+    display_background_color(NDSU_GREEN);
+ 
+    RGB666 c = {NDSU_YELLOW};
+    display_draw_box(200, 200,100, 40, c);
 
-    RGB666 color = RGB_TO_RGB666(0, 0, 0);
+    display_draw_text("Hello World", 100, 100);
     
 
-
-    display_background_color(255,0,0);
-    
-
-
-    while (1) {
-        for (int i = 0; i < 3; i++) {
-            printf("%d\n", color[i]);
-        
-        }
+    while (1){ 
         gpio_put(LED_PIN, 1);
-        sleep_ms(1000);
+        sleep_ms(5000);
     }
 }
