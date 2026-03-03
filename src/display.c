@@ -1,11 +1,14 @@
+#include "FreeMono9pt7b.h"
 #include "pico/stdlib.h"
 #include "display.h"
 #include "hardware/gpio.h"
 #include "hardware/spi.h"
 #include <stdint.h>
 #include "font.h"
+#include "FreeMono9pt7b.h"
+#include "FreeMono12pt7b.h"
+#include "FreeMono18pt7b.h"
 #include "FreeMono24pt7b.h"
-
 
 
 #define CLK 2
@@ -168,14 +171,30 @@ void display_draw_box(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint8_t* c
 
 
 
-void display_draw_text(const char* text, uint16_t x, uint16_t y){
+void display_draw_text(const char* text, uint16_t x, uint16_t y, uint8_t* color, FontSize size){
     uint16_t cursor_x = x;
-    uint8_t color[3] = {NDSU_YELLOW};
+    GFXfont font;
+    switch (size) {
+        case FONT_9PT:
+            font = FreeMono9pt7b;
+            break;
+        case FONT_12PT:
+            font = FreeMono12pt7b;
+            break;
+        case FONT_18PT:
+            font = FreeMono18pt7b;
+            break;
+        case FONT_24PT:
+            font = FreeMono24pt7b;
+            break;
+        default:
+            font = FreeMono9pt7b; 
+    }
 
     while(*text){
         char c = *text++;
-        GFXglyph glyph = FreeMono24pt7b.glyph[c - FreeMono24pt7b.first];
-        uint8_t *bitmap = FreeMono24pt7b.bitmap;
+        GFXglyph glyph = font.glyph[c - font.first];
+        uint8_t *bitmap = font.bitmap;
 
         uint16_t bitmap_offset = glyph.bitmapOffset;
         uint8_t current_byte = 0, bit = 0;

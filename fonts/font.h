@@ -20,3 +20,10 @@ typedef struct {
   uint16_t last;    ///< ASCII extents (last char)
   uint8_t yAdvance; ///< Newline distance (y axis)
 } GFXfont;
+
+typedef enum {
+    FONT_9PT  = 0,
+    FONT_12PT = 1,
+    FONT_18PT = 2,
+    FONT_24PT = 3,
+} FontSize;

@@ -1,5 +1,6 @@
 #pragma once
 #include <stdint.h>
+#include "font.h"
 
 typedef uint8_t RGB666[3];
 
@@ -17,4 +18,4 @@ void display_background_color(uint8_t r, uint8_t g, uint8_t b);
 
 void display_draw_box(uint16_t x, uint16_t y,uint16_t w, uint16_t h, uint8_t* color);
 
-void display_draw_text(const char* text, uint16_t x, uint16_t y);
+void display_draw_text(const char* text, uint16_t x, uint16_t y, uint8_t* color, FontSize size);

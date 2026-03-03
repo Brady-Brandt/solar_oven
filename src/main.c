@@ -1,6 +1,7 @@
 #include <pico/time.h>
 #include <stdint.h>
 #include "display.h"
+#include "font.h"
 #include "pico/stdlib.h"
 #include "hardware/gpio.h"
 
@@ -18,7 +19,7 @@ int main() {
     RGB666 c = {NDSU_YELLOW};
     display_draw_box(200, 200,100, 40, c);
 
-    display_draw_text("Hello World", 100, 100);
+    display_draw_text("Hello World", 100, 100, c, FONT_9PT);
     
 
     while (1){ 
