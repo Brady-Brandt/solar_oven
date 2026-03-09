@@ -16,10 +16,12 @@ int main() {
 
     display_background_color(NDSU_GREEN);
  
-    RGB666 c = {NDSU_YELLOW};
-    display_draw_box(200, 200,100, 40, c);
+    uint16_t yellow = NDSU_YELLOW;
 
-    display_draw_text("Hello World", 100, 100, c, FONT_9PT);
+    display_draw_text("Solar Oven", 100, 50, yellow, FONT_24PT);
+    display_draw_text("Temp Sensor 1:", 20, 100, yellow, FONT_12PT);
+    display_draw_text("Temp Sensor 2:", 20, 140, yellow, FONT_12PT);
+    display_draw_text("Temp Sensor 3:", 20, 180, yellow, FONT_12PT);
     
 
     while (1){ 

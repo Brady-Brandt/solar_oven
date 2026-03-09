@@ -29,8 +29,8 @@
 
 #define SPI_BAUDRATE 25000000
 
-#define BUFFER_SIZE 128 * 32
-static uint8_t BUFFER[BUFFER_SIZE];
+#define BUFFER_SIZE 2048
+static uint16_t BUFFER[BUFFER_SIZE];
 static uint16_t buffer_len = 0;
 
 
@@ -107,6 +107,11 @@ void display_init(){
     send_cmd(DISPLAY_INVERSION);
     sleep_ms(10);
 
+    //16 bit rgb
+    send_cmd(0x3A);
+    write_byte(0x55);
+    sleep_ms(10);
+
     send_cmd(DISPLAY_MADCTL);
     write_byte(0x28);
     sleep_ms(10);
@@ -124,28 +129,26 @@ static void set_address_window(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y
 
 
 
-void display_background_color(uint8_t r, uint8_t g, uint8_t b){ 
-    RGB666 color = RGB_TO_RGB666(r, g, b);
+void display_background_color(uint16_t color){ 
     set_address_window(0, 0, DISPLAY_WIDTH - 1, DISPLAY_HEIGHT - 1);
 
     start_write();
 
+    color = __builtin_bswap16(color);
     buffer_len = 0;
     for(uint32_t i = 0; i < DISPLAY_WIDTH * DISPLAY_HEIGHT; i++) {
-        BUFFER[buffer_len++] = color[0];
-        BUFFER[buffer_len++] = color[1];
-        BUFFER[buffer_len++] = color[2];
-        if(buffer_len >= BUFFER_SIZE - 3){
-            spi_write_blocking(spi0, BUFFER, buffer_len);
+        BUFFER[buffer_len++] = color;
+        if(buffer_len == BUFFER_SIZE - 1){
+            spi_write_blocking(spi0, (uint8_t*)BUFFER, buffer_len * 2);
             buffer_len = 0;
         }
     }
-    if(buffer_len != 0) spi_write_blocking(spi0, BUFFER, buffer_len);
+    if(buffer_len != 0) spi_write_blocking(spi0, (uint8_t*)BUFFER, buffer_len * 2);
     end_write();
 }
 
 
-void display_draw_box(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint8_t* color){
+void display_draw_box(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint16_t color){
     if(w == 0 || h == 0) return;
 
     set_address_window(x,y,x + w - 1,y + h - 1);
@@ -154,24 +157,24 @@ void display_draw_box(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint8_t* c
 
     uint32_t pixels = (uint32_t)w * h;
 
+    color = __builtin_bswap16(color);
+
     buffer_len = 0;
     for(uint32_t i = 0; i < pixels; i++) {
-        BUFFER[buffer_len++] = color[0];
-        BUFFER[buffer_len++] = color[1];
-        BUFFER[buffer_len++] = color[2];
-        if(buffer_len >= BUFFER_SIZE - 3){
-            spi_write_blocking(spi0, BUFFER, buffer_len);
+        BUFFER[buffer_len++] = color;
+        if(buffer_len == BUFFER_SIZE - 1){
+            spi_write_blocking(spi0, (uint8_t*)BUFFER, buffer_len * 2);
             buffer_len = 0;
         }
     }
-    if(buffer_len != 0) spi_write_blocking(spi0, BUFFER, buffer_len); 
+    if(buffer_len != 0) spi_write_blocking(spi0, (uint8_t*)BUFFER, buffer_len * 2); 
     end_write();
 }
 
 
 
 
-void display_draw_text(const char* text, uint16_t x, uint16_t y, uint8_t* color, FontSize size){
+void display_draw_text(const char* text, uint16_t x, uint16_t y, uint16_t color, FontSize size){
     uint16_t cursor_x = x;
     GFXfont font;
     switch (size) {
