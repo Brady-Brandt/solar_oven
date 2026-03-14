@@ -172,6 +172,41 @@ void display_draw_box(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint16_t c
 }
 
 
+void display_get_text_size(char* text, FontSize size, uint16_t* w, uint8_t* h, uint8_t* lower){
+    GFXfont font;
+    switch (size) {
+        case FONT_9PT:
+            font = FreeMono9pt7b;
+            break;
+        case FONT_12PT:
+            font = FreeMono12pt7b;
+            break;
+        case FONT_18PT:
+            font = FreeMono18pt7b;
+            break;
+        case FONT_24PT:
+            font = FreeMono24pt7b;
+            break;
+        default:
+            font = FreeMono9pt7b; 
+    }
+
+
+    uint16_t width = 0;
+    int16_t height = 0;
+    int8_t l = 0;
+    while(*text){
+        char c = *text++;
+        GFXglyph glyph = font.glyph[c - font.first];
+        if(glyph.yOffset < height) height = glyph.yOffset;
+        if(glyph.yOffset + glyph.height > l) l = glyph.yOffset + glyph.height;
+        width += glyph.xAdvance;
+    }
+
+    *w = width;
+    *h = (uint8_t)(-height);
+    *lower = l;
+}
 
 
 void display_draw_text(const char* text, uint16_t x, uint16_t y, uint16_t color, FontSize size){
@@ -191,7 +226,7 @@ void display_draw_text(const char* text, uint16_t x, uint16_t y, uint16_t color,
             font = FreeMono24pt7b;
             break;
         default:
-            font = FreeMono9pt7b; 
+            font = FreeMono9pt7b;
     }
 
     while(*text){
