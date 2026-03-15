@@ -210,7 +210,6 @@ void display_get_text_size(char* text, FontSize size, uint16_t* w, uint8_t* h, u
 
 
 void display_draw_text(const char* text, uint16_t x, uint16_t y, uint16_t color, FontSize size){
-    uint16_t cursor_x = x;
     GFXfont font;
     switch (size) {
         case FONT_9PT:
@@ -251,5 +250,36 @@ void display_draw_text(const char* text, uint16_t x, uint16_t y, uint16_t color,
             }
         }
         x += glyph.xAdvance;
+    }
+}
+
+
+void display_draw_circle(int x0, int y0, int r, uint16_t color){
+    int x = r;
+    int y = 0;
+    int err = 0;
+
+    while (x >= y)
+    {
+        display_draw_box(x0 + x, y0 + y, 1,1,color);
+        display_draw_box(x0 + y, y0 + x,1,1,color);
+        display_draw_box(x0 - y, y0 + x,1,1,color);
+        display_draw_box(x0 - x, y0 + y,1,1,color);
+        display_draw_box(x0 - x, y0 - y, 1,1,color);
+        display_draw_box(x0 - y, y0 - x, 1,1,color);
+        display_draw_box(x0 + y, y0 - x, 1,1,color);
+        display_draw_box(x0 + x, y0 - y,1,1,color);
+
+        y++;
+
+        if (err <= 0)
+        {
+            err += 2*y + 1;
+        }
+        else
+        {
+            x--;
+            err -= 2*x + 1;
+        }
     }
 }

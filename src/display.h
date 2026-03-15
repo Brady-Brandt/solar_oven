@@ -73,3 +73,13 @@ void display_draw_text(const char* text, uint16_t x, uint16_t y, uint16_t color,
  *              (the portion of characters that extend below the baseline, such as 'g' or 'y').
  */
 void display_get_text_size(char* text, FontSize size, uint16_t* w, uint8_t* h, uint8_t* lower);
+
+/**
+ * @brief Draws a circle on the display.
+ *
+ * @param x0 The x-coordinate of the circle's center.
+ * @param y0 The y-coordinate of the circle's center.
+ * @param r  The radius of the circle in pixels.
+ * @param color The color of the circle outline
+ */
+void display_draw_circle(int x0, int y0, int r, uint16_t color);
