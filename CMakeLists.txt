@@ -7,9 +7,17 @@ set(CMAKE_C_STANDARD 11)
 set(CMAKE_CXX_STANDARD 17)
 
 pico_sdk_init()
+
+add_compile_options(
+    -Wall
+    -Wextra
+    -Wshadow
+)
+
 add_executable(solar_oven
     src/main.c
     src/display.c
+    src/ui.c
 )
 
 target_include_directories(solar_oven PRIVATE fonts/)
