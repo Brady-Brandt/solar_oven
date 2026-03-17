@@ -1,7 +1,9 @@
 #include "ui.h"
 #include "font.h"
 #include "display.h"
+#include <hardware/rtc.h>
 #include <pico/time.h>
+#include <pico/types.h>
 #include <stdint.h>
 
 
@@ -110,4 +112,43 @@ void ui_update_temperature(uint8_t lbl, uint16_t temp){
     display_draw_circle(labels[lbl].x + labels[lbl].w + DEGREES_RAD, 
             labels[lbl].y - labels[lbl].h + DEGREES_RAD, DEGREES_RAD, NDSU_YELLOW);
     labels[lbl].w += DEGREES_RAD * 3;
+}
+
+
+#define TIME_X 10
+#define TIME_Y 305
+#define TIME_H 15
+
+void ui_display_time(){
+    //clear out old temperature
+    display_draw_box(TIME_X, TIME_Y - TIME_H, 90, TIME_H + 5, NDSU_GREEN);
+
+    datetime_t t;
+    rtc_get_datetime(&t);
+    // convert from utc to current time zone
+    // maybe include an option to set time zone but just going to hardcode for now
+    t.hour -= 5;
+    if(t.hour < 0){
+        t.hour += 24;
+    }
+
+    char apm = 'a';
+    if(t.hour >= 12){
+       apm = 'p'; 
+    }
+    uint16_t hour = (t.hour == 0) ? 12 : t.hour; 
+    hour = (hour > 12) ? hour - 12 : hour;
+ 
+    char txt[9];    
+    txt[0] = ((hour / 10) % 10) + '0';
+    txt[1] = (hour % 10) + '0';
+    txt[2] = ':';
+    txt[3] = ((t.min / 10) % 10) + '0';
+    txt[4] = (t.min% 10) + '0';
+    txt[5] = ' ';
+    txt[6] = apm;
+    txt[7] = 'm';
+    txt[8] = 0;
+
+    display_draw_text(txt, TIME_X, TIME_Y, NDSU_YELLOW, FONT_9PT);
 }

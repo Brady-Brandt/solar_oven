@@ -65,3 +65,12 @@ void ui_draw_temperature_screen(uint16_t s1, uint16_t s2, uint16_t s3);
  * @param temp New temperature value to display.
  */
 void ui_update_temperature(uint8_t lbl, uint16_t temp);
+
+/**
+ * @brief Updates the time 
+ *
+ * This function updates the time in the lower left corner using the rtc
+ * that was synced via an ntp server
+ *
+ */
+void ui_display_time();
