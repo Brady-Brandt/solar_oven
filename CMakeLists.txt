@@ -21,11 +21,20 @@ add_executable(solar_oven
     src/ui.c
     src/wifi.c
     src/ntp.c
+    src/debug.c
 )
 
 option(ENABLED_WIFI "Enable WIFI" 0)
 
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+    message(STATUS "DEBUG Mode")
+    add_compile_definitions(DEBUG=1)
+endif()
+
 if(ENABLE_WIFI)
+    if(NOT DEFINED ENV{SSID} OR NOT DEFINED ENV{PASSWD})
+        message(FATAL_ERROR "Environment variables not set")
+    endif()
     add_compile_definitions(
         PRIVATE SSID=\"$ENV{SSID}\"
         PRIVATE PASSWD=\"$ENV{PASSWD}\"
