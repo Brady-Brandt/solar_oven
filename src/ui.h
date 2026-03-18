@@ -4,6 +4,7 @@
 
 
 #define NO_BACKGROUND_COLOR 0xFFFF
+#define TASKBAR_Y 310
 
 extern uint8_t TEMP_L1;
 extern uint8_t TEMP_L2;
@@ -69,8 +70,16 @@ void ui_update_temperature(uint8_t lbl, uint16_t temp);
 /**
  * @brief Updates the time 
  *
- * This function updates the time in the lower left corner using the rtc
+ * This function updates the time in the right left corner using the rtc
  * that was synced via an ntp server
  *
  */
 void ui_display_time();
+
+/**
+ * @brief Displays the wifi status
+ *
+ * This function gets and displays the wifi status in the lower right corner
+ *
+*/
+void ui_display_wifi_status();

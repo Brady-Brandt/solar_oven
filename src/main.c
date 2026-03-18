@@ -28,6 +28,7 @@ int main() {
     }
 
     ui_draw_temperature_screen(10,18,15);
+    display_draw_text("WIFI: ", 5, TASKBAR_Y, NDSU_YELLOW, FONT_9PT);
     sync_rtc();
     
     uint16_t temp = 0;
@@ -38,10 +39,12 @@ int main() {
         ui_update_temperature(TEMP_L2, temp2++);
         ui_update_temperature(TEMP_L3, temp3++);
         ui_display_time();
+        //TODO: THIS DOESN'T NEED TO BE CALLED THIS OFTEN
+        ui_display_wifi_status();
         if(temp > 600) temp = 0;
         if(temp2 > 600) temp2 = 0;
         if(temp3 > 600) temp3 = 0;
         debug_pin_on();
-        sleep_ms(1000); 
+        sleep_ms(1000);
     }
 }

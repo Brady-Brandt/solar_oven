@@ -1,6 +1,8 @@
 #include "ui.h"
 #include "font.h"
 #include "display.h"
+#include "wifi.h"
+#include "debug.h"
 #include <hardware/rtc.h>
 #include <pico/time.h>
 #include <pico/types.h>
@@ -115,8 +117,8 @@ void ui_update_temperature(uint8_t lbl, uint16_t temp){
 }
 
 
-#define TIME_X 10
-#define TIME_Y 305
+#define TIME_X 385
+#define TIME_Y TASKBAR_Y
 #define TIME_H 15
 
 void ui_display_time(){
@@ -151,4 +153,30 @@ void ui_display_time(){
     txt[8] = 0;
 
     display_draw_text(txt, TIME_X, TIME_Y, NDSU_YELLOW, FONT_9PT);
+}
+
+
+#define WIFI_X 60
+#define WIFI_W 110
+#define WIFI_H 15
+void ui_display_wifi_status(){
+    display_draw_box(WIFI_X, TASKBAR_Y- WIFI_H, WIFI_W, WIFI_H + 1, NDSU_GREEN);
+    switch(wifi_status()){
+        case WIFI_DOWN:
+            display_draw_text("Off", WIFI_X, TASKBAR_Y, RGB565(192,192,196), FONT_9PT);
+            break;
+        case WIFI_CONNECTED:
+            display_draw_text("Connected", WIFI_X, TASKBAR_Y, RGB565(0,255,0), FONT_9PT);
+            break;
+        case WIFI_FAILED:
+            display_draw_text("Failed", WIFI_X, TASKBAR_Y, RGB565(255,0,0), FONT_9PT);
+            break;
+        case WIFI_NONET:
+            display_draw_text("No Network", WIFI_X, TASKBAR_Y, RGB565(255,165,0), FONT_9PT);
+            break;
+        case WIFI_BADAUTH:
+            display_draw_text("Auth Error", WIFI_X, TASKBAR_Y, RGB565(0,255,255), FONT_9PT);
+            break;
+
+    }
 }

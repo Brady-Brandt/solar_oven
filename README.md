@@ -67,8 +67,8 @@ make -j4
     - [ ] Manual Time Sync
     - [ ] Diagnostic Viewer
 
-  - [ ] Status Indicators
-    - [ ] WiFi Status
+  - [x] Status Indicators
+    - [x] WiFi Status
 
 - [ ] WiFi
   - [x] Connect to Internet
