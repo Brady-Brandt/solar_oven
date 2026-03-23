@@ -176,7 +176,8 @@ void ui_display_wifi_status(){
 
 
 void ui_draw_timer_and_temp() {
-    uint16_t temp = (uint16_t)((program_state.sensor1 + program_state.sensor1 + program_state.sensor3) / 3.0);
+    float ftemp = (program_state.sensor1 + program_state.sensor1 + program_state.sensor3) / 3.0f;
+    uint16_t temp = (program_state.is_celsius) ? (uint16_t)ftemp : (uint16_t)(ftemp * 1.8f + 32.0f);
     char temp_str[4];
     num_to_string(temp, temp_str);
 
@@ -200,10 +201,13 @@ void ui_draw_timer_and_temp() {
         bounding_box_update_text(TEMP_IDX, temp_str, FONT_24PT);
         bounding_box_update_text(TIMER_IDX, time_str, FONT_24PT);
     } else{
-        bounding_box_create_text(TEMP_IDX, 200, 120, temp_str, FONT_24PT);
+        bounding_box_create_text(TEMP_IDX, 190, 120, temp_str, FONT_24PT);
         bounding_box_create_text(TIMER_IDX, 170, 190, time_str, FONT_24PT);
     }
     bounding_box_draw_text(TEMP_IDX, temp_str, NDSU_YELLOW, FONT_24PT);
     bounding_box_draw_degrees_symbol(TEMP_IDX, (DEGREES_RAD + 1), NDSU_YELLOW);
+    display_draw_text((program_state.is_celsius) ? "C" : "F", boxes[TEMP_IDX].x + boxes[TEMP_IDX].w,
+            boxes[TEMP_IDX].y,NDSU_YELLOW, FONT_24PT);
+    boxes[TEMP_IDX].w += 25; //The size of capital F/C
     bounding_box_draw_text(TIMER_IDX, time_str, NDSU_YELLOW, FONT_24PT);
 }
