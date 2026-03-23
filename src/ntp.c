@@ -22,6 +22,7 @@ WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWIS
 THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 #include "hardware/rtc.h"
+#include "state.h"
 
 #ifdef ENABLE_WIFI
 
@@ -57,6 +58,7 @@ static void ntp_result(int status, time_t *result) {
             .min   = tm_info->tm_min,
             .sec   = tm_info->tm_sec
         };
+        program_state.time_synced = 1;
         rtc_set_datetime(&t); 
     } else{
         // on failure set ntp to epoch time
@@ -69,6 +71,7 @@ static void ntp_result(int status, time_t *result) {
             .min   = 0,
             .sec   = 0
         };
+        program_state.time_synced = 0;
         rtc_set_datetime(&t);
     }
 }
@@ -139,6 +142,7 @@ static bool ntp_init() {
 }
 
 void sync_rtc() {
+    program_state.time_synced = TIME_SYNC_IN_PROGESS;
     if(!ntp_init()) return;
     async_context_add_at_time_worker_in_ms(cyw43_arch_async_context(),  &state.request_worker, 0);
 }
@@ -153,6 +157,7 @@ void sync_rtc() {
         .min   = 0,
         .sec   = 0
     };
+    program_state.time_synced = 0;
     rtc_set_datetime(&t);
 }
 #endif //ENABLE_WIFI

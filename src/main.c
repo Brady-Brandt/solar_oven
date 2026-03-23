@@ -10,8 +10,12 @@
 #include "debug.h"
 #include "wifi.h"
 #include "ui.h"
+#include "state.h"
+
+ProgramState program_state = {0};
 
 int main() {
+    program_state.utc_offset = -5;
     rtc_init();
     debug_init();
     display_init();
