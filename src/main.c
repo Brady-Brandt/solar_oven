@@ -18,6 +18,7 @@ int main() {
     program_state.utc_offset = -5;
     rtc_init();
     debug_init();
+
     display_init();
 
     display_background_color(NDSU_GREEN);
@@ -31,23 +32,21 @@ int main() {
         }
     }
 
-    ui_draw_temperature_screen(10,18,15);
     display_draw_text("WIFI: ", 5, TASKBAR_Y, NDSU_YELLOW, FONT_9PT);
     sync_rtc();
     
-    uint16_t temp = 0;
-    uint16_t temp2 = 50;
-    uint16_t temp3 = 25;
+    program_state.sensor1 = 0;
+    program_state.sensor2 = 50;
+    program_state.sensor3 = 50;
     while (1){
-        ui_update_temperature(TEMP_L1, temp++);
-        ui_update_temperature(TEMP_L2, temp2++);
-        ui_update_temperature(TEMP_L3, temp3++);
         ui_display_time();
+        ui_draw_timer_and_temp();
+        program_state.sensor1++;
+        program_state.sensor2++;
+        program_state.sensor3++;
+        program_state.timer++;
         //TODO: THIS DOESN'T NEED TO BE CALLED THIS OFTEN
         ui_display_wifi_status();
-        if(temp > 600) temp = 0;
-        if(temp2 > 600) temp2 = 0;
-        if(temp3 > 600) temp3 = 0;
         debug_pin_on();
         sleep_ms(1000);
     }

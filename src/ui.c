@@ -3,120 +3,106 @@
 #include "display.h"
 #include "state.h"
 #include "wifi.h"
-#include "debug.h"
 #include <hardware/rtc.h>
 #include <pico/time.h>
 #include <pico/types.h>
 #include <stdint.h>
 
 
-static uint8_t labels_len = 0;
-#define MAX_LABELS 16
-static Label labels[MAX_LABELS];
-
-//temperature labels
-uint8_t TEMP_L1;
-uint8_t TEMP_L2;
-uint8_t TEMP_L3;
-
-//temperature as a string for each sensor
-static char TEMP1[4] = {0};
-static char TEMP2[4] = {0};
-static char TEMP3[4] = {0};
+static uint8_t bounding_len = 0;
+#define MAX_BOUNDING_BOXES 16
+static BoundingBox boxes[MAX_BOUNDING_BOXES];
 
 //Radius of the Degrees Symbol
 #define DEGREES_RAD 3
 
-uint8_t create_label(uint16_t x, uint16_t y, uint16_t fg, uint16_t bg, char* txt, FontSize font_size){
-    if(labels_len == MAX_LABELS - 1) labels_len = 0;
-
-    uint8_t lbl = labels_len;
-    
-    labels[labels_len].x = x;
-    labels[labels_len].y = y;
-    labels[labels_len].fg = fg;
-    labels[labels_len].bg = bg;
-    labels[labels_len].txt = txt;
-    labels[labels_len].font = font_size;
-    display_get_text_size(txt, font_size, &labels[labels_len].w, &labels[labels_len].h, &labels[labels_len].lower_bound);
-    labels_len++;
-
-    return lbl;
+static void bounding_box_create_text(uint8_t idx, uint16_t x, uint16_t y, char* txt, FontSize font_size){
+    boxes[idx].x = x;
+    boxes[idx].y = y;
+    display_get_text_size(txt, font_size,&boxes[idx].w,&boxes[idx].h, &boxes[idx].lower_bound);
+    bounding_len++;
 }
 
+#define bounding_box_update_text(idx, txt, font_size) \
+    display_get_text_size(txt, font_size, &boxes[idx].w,&boxes[idx].h, &boxes[idx].lower_bound)
+
+#define bounding_box_draw_text(idx, txt, color, font_size) \
+    display_draw_text(txt, boxes[idx].x, boxes[idx].y, color, font_size)
+
+#define bounding_box_clear_text(idx, bg) \
+    display_draw_box(boxes[idx].x, boxes[idx].y - boxes[idx].h, boxes[idx].w, boxes[idx].h + boxes[idx].lower_bound, bg);
+
+#define bounding_box_draw_degrees_symbol(idx, rad, color) \
+    do { \
+        display_draw_circle(boxes[idx].x + boxes[idx].w + rad, boxes[idx].y - boxes[idx].h + rad, rad, color); \
+        boxes[idx].w += rad * 3; \
+    } while(0)
+
+
+
 void ui_clear(uint16_t bg){
-    for (int i = 0; i < labels_len; i++) {
-        Label l = labels[i];
+    for (int i = 0; i < bounding_len; i++) {
+        BoundingBox l = boxes[i];
         display_draw_box(l.x, l.y - l.h, l.w, l.h + l.lower_bound, bg);
     }
-    labels_len = 0;
+    bounding_len = 0;
 }
 
 static inline void num_to_string(uint16_t num, char str[4]){
     str[0] = (num / 100) + '0';
     str[1] = ((num / 10) % 10) + '0';
     str[2] = (num % 10) + '0';
+    str[3] = 0;
 }
 
-
-void ui_draw_temperature_screen(uint16_t s1, uint16_t s2, uint16_t s3){
+#define S1_IDX 3
+#define S2_IDX 4
+#define S3_IDX 5
+void ui_draw_temperature_full() {
     uint8_t padding = 25;
-    uint8_t l1 = create_label(20, 100, NDSU_YELLOW, NO_BACKGROUND_COLOR, "Temp Sensor 1:", FONT_12PT);
 
-    uint16_t xoffset = padding + labels[l1].w;
+    char s1_str[4],s2_str[4],s3_str[4];
 
-    num_to_string(s1, TEMP1);
-    num_to_string(s2, TEMP2);
-    num_to_string(s3, TEMP3);
+    num_to_string(program_state.sensor1, s1_str);
+    num_to_string(program_state.sensor2, s2_str);
+    num_to_string(program_state.sensor3, s3_str);
 
-    TEMP_L1 = create_label(xoffset, 100, NDSU_YELLOW, NO_BACKGROUND_COLOR, TEMP1, FONT_12PT);
-    display_draw_circle(labels[TEMP_L1].x + labels[TEMP_L1].w + DEGREES_RAD, 
-            labels[TEMP_L1].y - labels[TEMP_L1].h + DEGREES_RAD, DEGREES_RAD, NDSU_YELLOW);
-    labels[TEMP_L1].w += DEGREES_RAD * 3;
+    //this branch is almost always taken
+    if(__builtin_expect(bounding_len != 0, 1)){
+        //clear out old temperature/time
+        bounding_box_clear_text(S1_IDX, NDSU_GREEN);
+        bounding_box_clear_text(S2_IDX, NDSU_GREEN);
+        bounding_box_clear_text(S3_IDX, NDSU_GREEN);
+        //update new bounding boxes
+        bounding_box_update_text(S1_IDX, s1_str, FONT_12PT);
+        bounding_box_update_text(S2_IDX, s2_str, FONT_12PT);
+        bounding_box_update_text(S3_IDX, s3_str, FONT_12PT);
+    } else{
+        bounding_box_create_text(0, 20, 100, "Temp Sensor 1:", FONT_12PT);
+        bounding_box_create_text(1, 20, 140, "Temp Sensor 2:", FONT_12PT);
+        bounding_box_create_text(2, 20, 180, "Temp Sensor 3:", FONT_12PT);
 
-    create_label(20, 140, NDSU_YELLOW, NO_BACKGROUND_COLOR, "Temp Sensor 2:", FONT_12PT);
-    TEMP_L2 = create_label(xoffset, 140, NDSU_YELLOW, NO_BACKGROUND_COLOR, TEMP2, FONT_12PT);
-    display_draw_circle(labels[TEMP_L2].x + labels[TEMP_L2].w + DEGREES_RAD, 
-            labels[TEMP_L2].y - labels[TEMP_L2].h + DEGREES_RAD, DEGREES_RAD, NDSU_YELLOW);
-
-    labels[TEMP_L2].w += DEGREES_RAD * 3;
-
-
-    create_label(20, 180, NDSU_YELLOW, NO_BACKGROUND_COLOR, 
-            "Temp Sensor 3:", FONT_12PT);
-
-    TEMP_L3 = create_label(xoffset, 180, NDSU_YELLOW, NO_BACKGROUND_COLOR, TEMP3, FONT_12PT);
-    display_draw_circle(labels[TEMP_L3].x + labels[TEMP_L3].w + DEGREES_RAD, 
-            labels[TEMP_L3].y - labels[TEMP_L3].h + DEGREES_RAD, DEGREES_RAD, NDSU_YELLOW);
-    labels[TEMP_L3].w += DEGREES_RAD * 3;
+        bounding_box_draw_text(0, "Temp Sensor 1:", NDSU_YELLOW, FONT_12PT);
+        bounding_box_draw_text(1, "Temp Sensor 2:", NDSU_YELLOW, FONT_12PT);
+        bounding_box_draw_text(2, "Temp Sensor 3:", NDSU_YELLOW, FONT_12PT);
 
 
-    
-
-    for (int i = 0; i < labels_len; i++) {
-        Label l = labels[i];
-        display_draw_text(l.txt, l.x, l.y, l.fg, l.font); 
+        uint16_t xoffset = padding + boxes[0].w;
+        bounding_box_create_text(S1_IDX, xoffset, 100, s1_str, FONT_12PT);
+        bounding_box_create_text(S2_IDX, xoffset, 140, s2_str, FONT_12PT);
+        bounding_box_create_text(S3_IDX, xoffset, 180, s3_str, FONT_12PT);
     }
 
+
+    bounding_box_draw_text(S1_IDX, s1_str, NDSU_YELLOW, FONT_12PT);
+    bounding_box_draw_degrees_symbol(S1_IDX, DEGREES_RAD, NDSU_YELLOW);
+
+    bounding_box_draw_text(S2_IDX, s2_str, NDSU_YELLOW, FONT_12PT);
+    bounding_box_draw_degrees_symbol(S2_IDX, DEGREES_RAD, NDSU_YELLOW);
+
+    bounding_box_draw_text(S3_IDX, s3_str, NDSU_YELLOW, FONT_12PT);
+    bounding_box_draw_degrees_symbol(S3_IDX, DEGREES_RAD, NDSU_YELLOW);
 }
-
-void ui_update_temperature(uint8_t lbl, uint16_t temp){
-    num_to_string(temp, labels[lbl].txt);
-    Label l1 = labels[lbl];
-    //clear out old temperature
-    display_draw_box(l1.x, l1.y - l1.h, l1.w, l1.h + l1.lower_bound, NDSU_GREEN);
-
-    //get new size
-    display_get_text_size(labels[lbl].txt, labels[lbl].font, &labels[lbl].w, &labels[lbl].h, &labels[lbl].lower_bound);
-
-
-    //draw new temperature
-    display_draw_text(labels[lbl].txt, labels[lbl].x, labels[lbl].y, labels[lbl].fg, labels[lbl].font); 
-    display_draw_circle(labels[lbl].x + labels[lbl].w + DEGREES_RAD, 
-            labels[lbl].y - labels[lbl].h + DEGREES_RAD, DEGREES_RAD, NDSU_YELLOW);
-    labels[lbl].w += DEGREES_RAD * 3;
-}
-
 
 #define TIME_X 385
 #define TIME_Y TASKBAR_Y
@@ -182,4 +168,42 @@ void ui_display_wifi_status(){
             break;
 
     }
+}
+
+
+#define TEMP_IDX 0
+#define TIMER_IDX 1
+
+
+void ui_draw_timer_and_temp() {
+    uint16_t temp = (uint16_t)((program_state.sensor1 + program_state.sensor1 + program_state.sensor3) / 3.0);
+    char temp_str[4];
+    num_to_string(temp, temp_str);
+
+    int minutes = program_state.timer / 60;
+    int seconds = program_state.timer % 60;
+
+    char time_str[6];
+    time_str[0] = '0' + (minutes / 10);
+    time_str[1] = '0' + (minutes % 10);
+    time_str[2] = ':';
+    time_str[3] = '0' + (seconds / 10);
+    time_str[4] = '0' + (seconds % 10);
+    time_str[5] = '\0';
+
+    //this branch is almost always taken
+    if(__builtin_expect(bounding_len != 0, 1)){
+        //clear out old temperature/time
+        bounding_box_clear_text(TEMP_IDX, NDSU_GREEN);
+        bounding_box_clear_text(TIMER_IDX, NDSU_GREEN);
+        //update new bounding boxes
+        bounding_box_update_text(TEMP_IDX, temp_str, FONT_24PT);
+        bounding_box_update_text(TIMER_IDX, time_str, FONT_24PT);
+    } else{
+        bounding_box_create_text(TEMP_IDX, 200, 120, temp_str, FONT_24PT);
+        bounding_box_create_text(TIMER_IDX, 170, 190, time_str, FONT_24PT);
+    }
+    bounding_box_draw_text(TEMP_IDX, temp_str, NDSU_YELLOW, FONT_24PT);
+    bounding_box_draw_degrees_symbol(TEMP_IDX, (DEGREES_RAD + 1), NDSU_YELLOW);
+    bounding_box_draw_text(TIMER_IDX, time_str, NDSU_YELLOW, FONT_24PT);
 }
