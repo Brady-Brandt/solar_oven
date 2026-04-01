@@ -1,0 +1,46 @@
+.program pulsewidth 
+
+; measure the pulse width of 555 timer in monostable mode
+; pushes UINT32_MAX - clocks / 2 to the FIFO buffer
+; triggers an interrupt
+; resolution should be between ~1-2 clks
+; compute number of clocks using (UINT32_MAX - value) * 2
+
+.wrap_target 
+    set x, 0
+    ; trigger pulse 
+    set pins, 0
+    ; need a delay of at least 10 us to trigger pulse
+    ; delay of about 16 us
+    set y, 31
+loop:
+    nop      [31]
+    nop      [30]
+    jmp pin start_count
+    jmp y-- loop
+
+    wait 1 pin 0
+start_count:
+    set pins, 1
+
+    ; Set x to UINT32_MAX
+    jmp x--, count_high
+
+
+count_high:
+    jmp x-- check_done
+check_done:
+    ;jmp if pin is still high
+    jmp pin count_high 
+
+    mov isr, x
+    push block
+
+    ; try to ensure the system is stable again
+    ; Wait ~2x cycles before starting the next reading
+    mov y, !x
+stabilize:
+    jmp y--, stabilize [1]
+
+    irq 0
+.wrap

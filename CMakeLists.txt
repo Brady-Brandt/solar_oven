@@ -22,6 +22,7 @@ add_executable(solar_oven
     src/wifi.c
     src/ntp.c
     src/debug.c
+    src/sensors.c
 )
 
 option(ENABLED_WIFI "Enable WIFI" 0)
@@ -55,7 +56,7 @@ else()
     message(STATUS "Wifi disabled")
 endif()
 
-
+pico_generate_pio_header(solar_oven ${CMAKE_CURRENT_LIST_DIR}/src/pulsewidth.pio)
 target_include_directories(solar_oven PRIVATE fonts/)
 target_include_directories(solar_oven PRIVATE ${CMAKE_CURRENT_LIST_DIR}/src/wconfig)
 
@@ -66,5 +67,9 @@ pico_enable_stdio_uart(solar_oven 1)
 pico_add_extra_outputs(solar_oven)
 
 target_link_libraries(solar_oven 
-    pico_stdlib hardware_spi hardware_rtc 
+    pico_stdlib
+    hardware_spi
+    hardware_rtc
+    hardware_pio
+    hardware_adc
 )
