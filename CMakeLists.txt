@@ -23,6 +23,7 @@ add_executable(solar_oven
     src/ntp.c
     src/debug.c
     src/sensors.c
+    src/touchscreen.c
 )
 
 option(ENABLED_WIFI "Enable WIFI" 0)
@@ -72,4 +73,5 @@ target_link_libraries(solar_oven
     hardware_rtc
     hardware_pio
     hardware_adc
+    hardware_i2c
 )
