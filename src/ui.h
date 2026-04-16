@@ -12,6 +12,22 @@ typedef struct {
 } BoundingBox;
 
 
+typedef enum {
+    SHORT_PRESS,
+    MEDIUM_PRESS,
+    LONG_PRESS,
+} ButtonPress;
+
+typedef struct{
+    uint8_t bnd_idx;
+    uint8_t is_pressed;
+    uint32_t press_start;
+    uint32_t last_clicked;
+    uint32_t last_seen;
+    void (*callback)(ButtonPress press);
+} Button;
+
+
 typedef struct {
     uint16_t x;
     uint16_t y;
@@ -64,3 +80,20 @@ void ui_display_wifi_status();
  *
  */
 void ui_draw_timer_and_temp();
+
+
+/**
+ * @brief Displays all UI buttons on the screen.
+ *
+ * Responsible for rendering the current set of UI buttons
+ * based on the active UI state.
+ */
+void ui_display_btns();
+
+/**
+ * @brief Checks UI button states and handles interactions.
+ *
+ * Processes input events and determines if any UI buttons
+ * have been activated, then triggers their associated actions.
+ */
+void ui_check_btns();
