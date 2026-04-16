@@ -13,10 +13,15 @@ typedef struct {
     float sensor3;
     uint16_t timer;
     WifiStatus wifi_status;
+    uint8_t screen;
+    uint8_t prev_screen;
     uint8_t time_synced;
     int8_t utc_offset;
     uint8_t is_celsius;
 } ProgramState;
+
+#define HOME_SCREEN     0
+#define SETTINGS_SCREEN 1
 
 
 extern ProgramState program_state;

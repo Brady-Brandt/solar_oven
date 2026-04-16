@@ -97,3 +97,8 @@ void ui_display_btns();
  * have been activated, then triggers their associated actions.
  */
 void ui_check_btns();
+
+/**
+ * @brief Draws the settings screen
+ */
+void ui_draw_settings_screen();

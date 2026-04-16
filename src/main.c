@@ -62,8 +62,13 @@ int main() {
     repeating_timer_t timer;
     add_repeating_timer_ms(1000, update_timer, NULL, &timer);
     ui_display_btns();
+
     while (1){
-        ui_draw_timer_and_temp();
+        debug_info("Monostable: %f°C\n", program_state.sensor1);
+        debug_info("ADC: %f°C\n", program_state.sensor2);
+        if(program_state.screen == HOME_SCREEN){
+            ui_draw_timer_and_temp();
+        }
         ui_display_wifi_status();
         ui_display_time();
         ui_check_btns();
