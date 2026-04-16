@@ -47,8 +47,13 @@ make -j4
 
 # Feature Outline
 - [ ] Temperature Sensing
-  - [ ] Hardware
+  - [x] Hardware
+    - [x] 555 Monostable Circuit
+    - [x] Voltage Divider into Op amp  
   - [ ] Software
+    - [x] Monostable PIO code
+    - [x] ADC Code
+    - [ ] Calibration
 
 - [ ] Display (Touchscreen - ST7796)
   - [x] Graphics Driver
@@ -62,10 +67,11 @@ make -j4
     - [ ] ~Weather Display~
 
   - [ ] Settings
-    - [ ] Toggle °C / °F
-    - [ ] Set Time (UTC Offset)
+    - [x] Toggle °C / °F
+    - [x] Set Time (UTC Offset)
     - [ ] Manual Time Sync
     - [ ] Diagnostic Viewer
+    - [ ] Store values in flash
 
   - [x] Status Indicators
     - [x] WiFi Status
