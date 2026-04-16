@@ -52,14 +52,14 @@ make -j4
 
 - [ ] Display (Touchscreen - ST7796)
   - [x] Graphics Driver
-  - [ ] Touch Driver
+  - [x] Touch Driver (GT911)
 
   - [ ] UI Features
     - [x] Text Renderer 
     - [x] Temperature Display
-    - [ ] Timer Display
+    - [x] Timer Display
     - [x] Current Time Display
-    - [ ] Weather Display
+    - [ ] ~Weather Display~
 
   - [ ] Settings
     - [ ] Toggle °C / °F
@@ -74,4 +74,4 @@ make -j4
   - [x] Connect to Internet
   - [x] Sync Time (NTP) on boot
   - [ ] Send Data to Adafruit (HTTP)
-  - [ ] Fetch Weather (OpenWeatherMap HTTPS)
+  - [ ] ~Fetch Weather (OpenWeatherMap HTTPS)~
