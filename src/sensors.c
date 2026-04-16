@@ -9,6 +9,7 @@
 #include <hardware/timer.h>
 #include <pico/time.h>
 #include <stdint.h>
+#include <math.h>
 
 
 #define ADC_INPUT_PIN 28 
@@ -32,8 +33,12 @@
 
 #define CONVERSION_FACTOR (3.3f / (1 << 12))
 #define OP_AMP_GAIN       (1 + 2200.0f / 8200.0f)
-#define VOLTAGE_DIVIDER_R 8200.0f
+#define VOLTAGE_DIVIDER_R 27000.0f
 #define ADC_TO_RESISTANCE(val) VOLTAGE_DIVIDER_R / (3.3f / ((CONVERSION_FACTOR * val) / OP_AMP_GAIN) - 1)
+
+#define BETA  3892.0f
+#define R0    100000.0f
+#define RESISTANCE_TO_TEMP(resistance) (298*BETA) / (298*logf(resistance/R0) + BETA) - 273
 
 static void pio0_irq0_handler() {
     while (!pio_sm_is_rx_fifo_empty(pio0, sm)) {
@@ -41,14 +46,18 @@ static void pio0_irq0_handler() {
         uint32_t high_time = UINT32_MAX - raw;
 
         float seconds = (high_time * 2) / 125000000.0f;
-        program_state.sensor1 = (seconds / CAPACITANCE);
+        float resistance = (seconds / CAPACITANCE);
+        program_state.sensor1 = RESISTANCE_TO_TEMP(resistance);
+
+
     } 
     pio_interrupt_clear(pio0, 0);
 }
 
 static void adc_irq_handler(){
     uint16_t reading = adc_fifo_get();
-    program_state.sensor2 = ADC_TO_RESISTANCE(reading);
+    float resistance = ADC_TO_RESISTANCE(reading);
+    program_state.sensor2 = RESISTANCE_TO_TEMP(resistance);
 }
 
 void sensors_init(){
