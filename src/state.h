@@ -22,6 +22,8 @@ typedef struct {
 extern ProgramState program_state;
 
 // store time paused in msb of timer
-#define time_is_paused() (program_state.timer >> 15) 
-#define time_unpause()   (program_state.timer ^= (1 << 15); 
-#define time_is_up()    ((program_state.timer & 0x7ff) == 0)
+#define TIMER_MASK 0x7fff
+#define time_get()       (program_state.timer & TIMER_MASK)
+#define time_is_paused() (program_state.timer >> 15)
+#define time_unpause()   (program_state.timer ^= (1 << 15))
+#define time_is_up()    ((program_state.timer & TIMER_MASK) == 0)
