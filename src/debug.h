@@ -15,7 +15,7 @@ void debug_init();
  * @param fmt Format string (printf-style).
  * @param ... Additional arguments matching the format specifiers.
  */
-void debug_print(const char* fmt, ...);
+void debug_print(const char* fmt, ...) __attribute__((format(printf,1,2)));
 
 /**
  * @brief Prints an informational debug message.
@@ -26,7 +26,7 @@ void debug_print(const char* fmt, ...);
  * @param fmt Format string (printf-style).
  * @param ... Additional arguments matching the format specifiers.
  */
-void debug_info(const char* fmt, ...);
+void debug_info(const char* fmt, ...) __attribute__((format(printf,1,2)));
 
 /**
  * @brief Prints an error debug message.
@@ -37,7 +37,7 @@ void debug_info(const char* fmt, ...);
  * @param fmt Format string (printf-style).
  * @param ... Additional arguments matching the format specifiers.
  */
-void debug_err(const char* fmt, ...);
+void debug_err(const char* fmt, ...) __attribute__((format(printf,1,2)));
 
 /**
  * @brief Sets the debug pin to a high/on state.
