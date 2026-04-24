@@ -1,4 +1,5 @@
 #include "ui.h"
+#include "https.h"
 #include "debug.h"
 #include "font.h"
 #include "display.h"
@@ -97,40 +98,33 @@ static inline void num_to_string(uint16_t num, char str[4]){
 
 #define S1_IDX 3
 #define S2_IDX 4
-#define S3_IDX 5
 void ui_draw_temperature_full() {
     uint8_t padding = 25;
 
-    char s1_str[4],s2_str[4],s3_str[4];
+    char s1_str[4],s2_str[4];
 
     num_to_string(program_state.sensor1, s1_str);
     num_to_string(program_state.sensor2, s2_str);
-    num_to_string(program_state.sensor3, s3_str);
 
     //this branch is almost always taken
     if(__builtin_expect(bounding_len != 0, 1)){
         //clear out old temperature/time
         bounding_box_clear_text(S1_IDX, NDSU_GREEN);
         bounding_box_clear_text(S2_IDX, NDSU_GREEN);
-        bounding_box_clear_text(S3_IDX, NDSU_GREEN);
         //update new bounding boxes
         bounding_box_update_text(S1_IDX, s1_str, FONT_12PT);
         bounding_box_update_text(S2_IDX, s2_str, FONT_12PT);
-        bounding_box_update_text(S3_IDX, s3_str, FONT_12PT);
     } else{
         bounding_box_create_text(0, 20, 100, "Temp Sensor 1:", FONT_12PT);
         bounding_box_create_text(1, 20, 140, "Temp Sensor 2:", FONT_12PT);
-        bounding_box_create_text(2, 20, 180, "Temp Sensor 3:", FONT_12PT);
 
         bounding_box_draw_text(0, "Temp Sensor 1:", NDSU_YELLOW, FONT_12PT);
         bounding_box_draw_text(1, "Temp Sensor 2:", NDSU_YELLOW, FONT_12PT);
-        bounding_box_draw_text(2, "Temp Sensor 3:", NDSU_YELLOW, FONT_12PT);
 
 
         uint16_t xoffset = padding + boxes[0].w;
         bounding_box_create_text(S1_IDX, xoffset, 100, s1_str, FONT_12PT);
         bounding_box_create_text(S2_IDX, xoffset, 140, s2_str, FONT_12PT);
-        bounding_box_create_text(S3_IDX, xoffset, 180, s3_str, FONT_12PT);
     }
 
 
@@ -138,10 +132,7 @@ void ui_draw_temperature_full() {
     bounding_box_draw_degrees_symbol(S1_IDX, DEGREES_RAD, NDSU_YELLOW);
 
     bounding_box_draw_text(S2_IDX, s2_str, NDSU_YELLOW, FONT_12PT);
-    bounding_box_draw_degrees_symbol(S2_IDX, DEGREES_RAD, NDSU_YELLOW);
-
-    bounding_box_draw_text(S3_IDX, s3_str, NDSU_YELLOW, FONT_12PT);
-    bounding_box_draw_degrees_symbol(S3_IDX, DEGREES_RAD, NDSU_YELLOW);
+    bounding_box_draw_degrees_symbol(S2_IDX, DEGREES_RAD, NDSU_YELLOW); 
 }
 
 #define TIME_X 385
@@ -237,7 +228,9 @@ void ui_draw_timer_and_temp() {
     static uint16_t prev_timer = 0;
 
     float ftemp = (program_state.sensor1 + program_state.sensor1) / 2.0f;
-    uint16_t temp = (program_state.is_celsius) ? (uint16_t)roundf(ftemp) : (uint16_t)roundf(ftemp * 1.8f + 32.0f);
+    //data sent to adafruit will always be in fahrenheit
+    program_state.temperature = (uint16_t)roundf(ftemp * 1.8f + 32.0f);
+    uint16_t temp = (program_state.is_celsius) ? (uint16_t)roundf(ftemp) : program_state.temperature;
     char temp_str[4];
     num_to_string(temp, temp_str);
 
@@ -329,12 +322,20 @@ static void decrement_time_cb(ButtonPress press){
     }
 }
 
+
+
+static repeating_timer_t ada_timer;
 static void start_stop_cb(__unused ButtonPress press){
     // stop the beeper and put 1 minute back on the timer (basically reset)
     if(time_is_up()){
         program_state.timer = (program_state.timer & (1 << 15)) | 60;
         gpio_put(13, 0);
+    } else if(time_is_paused()){
+        add_repeating_timer_ms(5000,adafruit_send_temperatue,
+                NULL, &ada_timer);
+        time_unpause();
     } else{
+        cancel_repeating_timer(&ada_timer);
         time_unpause();
     }
 }

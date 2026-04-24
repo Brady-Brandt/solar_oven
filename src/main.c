@@ -27,6 +27,7 @@ static bool update_timer(__unused repeating_timer_t *rt){
     return true;
 }
 
+
 int main() {
     program_state.utc_offset = -5;
     rtc_init();
@@ -53,8 +54,9 @@ int main() {
 
     program_state.sensor1 = 0;
     program_state.sensor2 = 50;
-    program_state.sensor3 = 50;
     program_state.timer =  1 << 15 | 60;
+
+    // init buzzer timer
     gpio_init(13);
     gpio_set_dir(13, GPIO_OUT);
     gpio_put(13, 0);
@@ -62,10 +64,10 @@ int main() {
     repeating_timer_t timer;
     add_repeating_timer_ms(1000, update_timer, NULL, &timer);
     ui_display_btns();
-
+    program_state.temperature = 68;
     while (1){
-        debug_info("Monostable: %f°C\n", program_state.sensor1);
-        debug_info("ADC: %f°C\n", program_state.sensor2);
+        //debug_info("Monostable: %f°C\n", program_state.sensor1);
+        //debug_info("ADC: %f°C\n", program_state.sensor2);
         if(program_state.screen == HOME_SCREEN){
             ui_draw_timer_and_temp();
         }

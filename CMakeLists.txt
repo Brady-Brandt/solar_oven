@@ -6,6 +6,7 @@ project(solar_oven C CXX ASM)
 
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 pico_sdk_init()
 
@@ -24,6 +25,8 @@ add_executable(solar_oven
     src/debug.c
     src/sensors.c
     src/touchscreen.c
+    src/adafruit.c
+    src/https.c
 )
 
 option(ENABLED_WIFI "Enable WIFI" 0)
@@ -40,6 +43,8 @@ if(ENABLE_WIFI)
     add_compile_definitions(
         PRIVATE SSID=\"$ENV{SSID}\"
         PRIVATE PASSWD=\"$ENV{PASSWD}\"
+        PRIVATE ADAFRUIT_API_KEY=\"$ENV{ADAFRUIT_API_KEY}\"
+        PRIVATE ADAFRUIT_USERNAME=\"$ENV{ADAFRUIT_USERNAME}\"
     )
     message(STATUS "Wifi enabled")
     add_definitions(-DENABLE_WIFI)

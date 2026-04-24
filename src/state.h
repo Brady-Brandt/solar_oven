@@ -7,10 +7,9 @@
 #define TIME_SYNCED 0x01
 
 typedef struct {
-    float temperature;
+    uint16_t temperature;
     float sensor1;
     float sensor2;
-    float sensor3;
     uint16_t timer;
     WifiStatus wifi_status;
     uint8_t screen;
