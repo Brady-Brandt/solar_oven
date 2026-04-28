@@ -41,6 +41,8 @@ I also plan on using an API to get the weather to give you an idea on how well t
           - Pushes the measured pulse width to the FIFO buffer and triggers an interrupt
      - `src/state.h`
           - Stores the global system state
+     - `src/pins.h`
+          - Pin Mapping header for all peripherals
      - `src/wifi.c`
           - Handles connecting to Wifi and getting the connection status
      - `src/ntp.c`
