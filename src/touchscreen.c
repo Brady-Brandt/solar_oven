@@ -1,13 +1,10 @@
 #include "touchscreen.h"
 #include "hardware/i2c.h"
 #include "hardware/gpio.h"
+#include "pins.h"
 #include <pico/time.h>
 #include <stdint.h>
 
-#define SDA_PIN        8
-#define SCL_PIN        9
-#define RESET_PIN     10
-#define INTERRUPT_PIN 11
 #define ADDR          0x5D
 
 #define _COMMAND          0x8040
@@ -63,21 +60,21 @@ static void read(uint16_t reg, uint8_t* data, size_t len){
 
 void touchscreen_init(){
     i2c_init(I2C_BUS, 100000);    
-    gpio_set_function(SDA_PIN, GPIO_FUNC_I2C);
-    gpio_set_function(SCL_PIN, GPIO_FUNC_I2C);
+    gpio_set_function(PIN_TOUCH_SDA, GPIO_FUNC_I2C);
+    gpio_set_function(PIN_TOUCH_SCL, GPIO_FUNC_I2C);
 
-    gpio_init(INTERRUPT_PIN);
-    gpio_set_dir(INTERRUPT_PIN, GPIO_OUT);
-    gpio_init(RESET_PIN);
-    gpio_set_dir(RESET_PIN, GPIO_OUT);
+    gpio_init(PIN_TOUCH_INT);
+    gpio_set_dir(PIN_TOUCH_INT, GPIO_OUT);
+    gpio_init(PIN_TOUCH_RESET);
+    gpio_set_dir(PIN_TOUCH_RESET, GPIO_OUT);
 
-    gpio_put(RESET_PIN,0);
-    gpio_put(INTERRUPT_PIN,0);
+    gpio_put(PIN_TOUCH_RESET,0);
+    gpio_put(PIN_TOUCH_INT,0);
     sleep_us(1000);
-    gpio_put(RESET_PIN, 1);
+    gpio_put(PIN_TOUCH_RESET, 1);
     sleep_ms(110);
 
-    gpio_set_dir(INTERRUPT_PIN, GPIO_IN);
+    gpio_set_dir(PIN_TOUCH_INT, GPIO_IN);
 
     write_reg16_16(_RESOLUTION_X, 480);
     write_reg16_16(_RESOLUTION_Y, 320);

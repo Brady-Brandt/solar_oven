@@ -12,13 +12,14 @@
 #include "wifi.h"
 #include "ui.h"
 #include "state.h"
+#include "pins.h"
 #include "touchscreen.h"
 
 ProgramState program_state = {0};
 
 static bool update_timer(__unused repeating_timer_t *rt){
     if(time_is_up()){
-        gpio_xor_mask(1 << 13);
+        gpio_xor_mask(1 << PIN_TIMER_BUZZER);
         return true;
     } else if (time_is_paused()) {
         return true;
@@ -57,9 +58,9 @@ int main() {
     program_state.timer =  1 << 15 | 60;
 
     // init buzzer timer
-    gpio_init(13);
-    gpio_set_dir(13, GPIO_OUT);
-    gpio_put(13, 0);
+    gpio_init(PIN_TIMER_BUZZER);
+    gpio_set_dir(PIN_TIMER_BUZZER, GPIO_OUT);
+    gpio_put(PIN_TIMER_BUZZER, 0);
 
     repeating_timer_t timer;
     add_repeating_timer_ms(1000, update_timer, NULL, &timer);

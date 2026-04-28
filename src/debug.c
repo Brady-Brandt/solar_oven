@@ -4,15 +4,13 @@
 #ifdef DEBUG 
 #include "pico/stdio.h"
 #include "pico/stdlib.h"
+#include "pins.h"
 #include <stdarg.h>
-
-//may use this pin for visual debugging
-#define LED_PIN  16
 
 void debug_init(){
     stdio_init_all();
-    gpio_init(LED_PIN);
-    gpio_set_dir(LED_PIN, GPIO_OUT);
+    gpio_init(PIN_DEBUG_LED);
+    gpio_set_dir(PIN_DEBUG_LED, GPIO_OUT);
 }
 
 
@@ -40,15 +38,15 @@ void debug_err(const char* fmt, ...){
 }
 
 void debug_pin_on(){
-    gpio_put(LED_PIN, 1);
+    gpio_put(PIN_DEBUG_LED, 1);
 }
 
 void debug_pin_off(){
-    gpio_put(LED_PIN, 0);
+    gpio_put(PIN_DEBUG_LED, 0);
 }
 
 void debug_pin_put(unsigned int value){
-    gpio_put(LED_PIN, value);
+    gpio_put(PIN_DEBUG_LED, value);
 }
 
 #endif

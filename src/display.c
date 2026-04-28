@@ -4,19 +4,13 @@
 #include "hardware/gpio.h"
 #include "hardware/spi.h"
 #include <stdint.h>
+#include "pins.h"
 #include "font.h"
 #include "FreeMono9pt7b.h"
 #include "FreeMono12pt7b.h"
 #include "FreeMono18pt7b.h"
 #include "FreeMono24pt7b.h"
 
-
-#define CLK 2
-#define LCD_DIN 3
-#define DATAOUT 4
-#define CS 5
-#define DC 6
-#define RESET 7
 
 #define DISPLAY_SLEEP_OUT 0x11
 #define DISPLAY_ON 0x29
@@ -27,7 +21,7 @@
 #define DISPLAY_INVERSION 0x21
 
 
-#define SPI_BAUDRATE 25000000
+#define SPI_BAUDRATE 35000000
 
 #define BUFFER_SIZE 2048
 static uint16_t BUFFER[BUFFER_SIZE];
@@ -35,49 +29,49 @@ static uint16_t buffer_len = 0;
 
 
 static void display_reset(){
-   gpio_put(RESET, 0);
+   gpio_put(PIN_LCD_RESET, 0);
    sleep_ms(10);
-   gpio_put(RESET, 1);
+   gpio_put(PIN_LCD_RESET, 1);
    sleep_ms(150);
 }
 
 
 static void send_cmd(uint8_t cmd){
-    gpio_put(DC, 0);
-    gpio_put(CS, 0);
+    gpio_put(PIN_LCD_DC, 0);
+    gpio_put(PIN_LCD_CS, 0);
     spi_write_blocking(spi0,&cmd, 1);
-    gpio_put(CS,1);
+    gpio_put(PIN_LCD_CS,1);
 }
 
 //starts a write command and opens stream for data
 static inline void start_write(){
-    gpio_put(CS, 0);
-    gpio_put(DC, 0);
+    gpio_put(PIN_LCD_CS, 0);
+    gpio_put(PIN_LCD_DC, 0);
     const uint8_t WRITE = DISPLAY_MEM_WRITE;
     spi_write_blocking(spi0, &WRITE, 1);
-    gpio_put(DC, 1);
+    gpio_put(PIN_LCD_DC, 1);
 }
 
 static inline void end_write(){
-    gpio_put(CS, 1);
+    gpio_put(PIN_LCD_CS, 1);
 }
 
 //sends a command along with its parameters
 static void send_cmd_with_data(uint8_t cmd, uint8_t* data, size_t len){
-    gpio_put(DC, 0);
-    gpio_put(CS, 0);
+    gpio_put(PIN_LCD_DC, 0);
+    gpio_put(PIN_LCD_CS, 0);
     spi_write_blocking(spi0,&cmd, 1);
-    gpio_put(DC, 1);
+    gpio_put(PIN_LCD_DC, 1);
     spi_write_blocking(spi0, data, len);
-    gpio_put(CS, 1);
+    gpio_put(PIN_LCD_CS, 1);
 }
 
 
 static void write_byte(uint8_t data) {
-    gpio_put(DC, 1);
-    gpio_put(CS, 0);
+    gpio_put(PIN_LCD_DC, 1);
+    gpio_put(PIN_LCD_CS, 0);
     spi_write_blocking(spi0, &data, 1);
-    gpio_put(CS, 1);
+    gpio_put(PIN_LCD_CS, 1);
 }
 
 
@@ -86,16 +80,16 @@ void display_init(){
     spi_set_format(spi0, 8, SPI_CPOL_0, SPI_CPHA_0, SPI_MSB_FIRST);
 
 
-    gpio_set_function(CLK, GPIO_FUNC_SPI);
-    gpio_set_function(LCD_DIN, GPIO_FUNC_SPI);
+    gpio_set_function(PIN_LCD_CLK, GPIO_FUNC_SPI);
+    gpio_set_function(PIN_LCD_DIN, GPIO_FUNC_SPI);
 
 
-    gpio_init(CS); 
-    gpio_set_dir(CS, GPIO_OUT);
-    gpio_init(DC); 
-    gpio_set_dir(DC, GPIO_OUT);
-    gpio_init(RESET); 
-    gpio_set_dir(RESET, GPIO_OUT);
+    gpio_init(PIN_LCD_CS);
+    gpio_set_dir(PIN_LCD_CS, GPIO_OUT);
+    gpio_init(PIN_LCD_DC);
+    gpio_set_dir(PIN_LCD_DC, GPIO_OUT);
+    gpio_init(PIN_LCD_RESET);
+    gpio_set_dir(PIN_LCD_RESET, GPIO_OUT);
 
     display_reset();
     send_cmd(DISPLAY_SLEEP_OUT);
@@ -133,7 +127,7 @@ void display_background_color(uint16_t color){
     set_address_window(0, 0, DISPLAY_WIDTH - 1, DISPLAY_HEIGHT - 1);
 
     start_write();
-
+    // LCD expects data in big endian and the pico is little endian
     color = __builtin_bswap16(color);
     buffer_len = 0;
     for(uint32_t i = 0; i < DISPLAY_WIDTH * DISPLAY_HEIGHT; i++) {

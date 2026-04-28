@@ -6,16 +6,12 @@
 #include "pulsewidth.pio.h"
 #include "hardware/adc.h"
 #include "state.h"
+#include "pins.h"
 #include <hardware/timer.h>
 #include <pico/time.h>
 #include <stdint.h>
 #include <math.h>
 
-
-#define ADC_INPUT_PIN 28 
-
-#define TRIGGER_PIN 18
-#define INPUT_PIN   19
 
 #define sm 0
 #define CAPACITANCE (1.1 * 100*1e-9)
@@ -67,24 +63,24 @@ void sensors_init(){
 
     pio_sm_config c = pulsewidth_program_get_default_config(offset);
 
-    pio_gpio_init(pio, TRIGGER_PIN);
-    gpio_init(INPUT_PIN);
-    gpio_set_dir(INPUT_PIN, GPIO_IN);
+    pio_gpio_init(pio, PIN_MONO_TRIGGER);
+    gpio_init(PIN_MONO_INPUT);
+    gpio_set_dir(PIN_MONO_INPUT, GPIO_IN);
 
     // Set pin directions
-    sm_config_set_out_pins(&c, TRIGGER_PIN, 1);
+    sm_config_set_out_pins(&c, PIN_MONO_TRIGGER, 1);
     sm_config_set_out_pin_count(&c, 1);
-    sm_config_set_in_pins(&c, INPUT_PIN);
+    sm_config_set_in_pins(&c, PIN_MONO_INPUT);
     sm_config_set_in_pin_count(&c, 1);
-    sm_config_set_set_pins(&c, TRIGGER_PIN, 1);
+    sm_config_set_set_pins(&c, PIN_MONO_TRIGGER, 1);
     sm_config_set_set_pin_count(&c, 1);
-    sm_config_set_jmp_pin(&c, INPUT_PIN);
+    sm_config_set_jmp_pin(&c, PIN_MONO_INPUT);
     sm_config_set_fifo_join(&c, PIO_FIFO_JOIN_NONE);
 
     pio_sm_init(pio, sm, offset, &c);
 
-    pio_sm_set_consecutive_pindirs(pio, sm, TRIGGER_PIN, 1, true);
-    pio_sm_set_consecutive_pindirs(pio, sm, INPUT_PIN, 1, false);
+    pio_sm_set_consecutive_pindirs(pio, sm, PIN_MONO_TRIGGER, 1, true);
+    pio_sm_set_consecutive_pindirs(pio, sm, PIN_MONO_INPUT, 1, false);
  
     irq_set_exclusive_handler(PIO0_IRQ_0, pio0_irq0_handler);
     pio_set_irq0_source_enabled(pio0, pis_interrupt0, true);
@@ -92,7 +88,7 @@ void sensors_init(){
     pio_sm_set_enabled(pio, sm, true);
 
     adc_init();
-    adc_gpio_init(ADC_INPUT_PIN);
+    adc_gpio_init(PIN_TEMP_ADC);
     adc_fifo_setup(true, true, 1, false, false);
     adc_set_clkdiv(65535);
     irq_set_exclusive_handler(ADC_IRQ_FIFO, adc_irq_handler);
