@@ -74,7 +74,7 @@ I also plan on using an API to get the weather to give you an idea on how well t
   - [x] Graphics Driver
   - [x] Touch Driver (GT911)
 
-  - [ ] UI Features
+  - [x] UI Features
     - [x] Text Renderer 
     - [x] Temperature Display
     - [x] Timer Display
@@ -91,7 +91,7 @@ I also plan on using an API to get the weather to give you an idea on how well t
   - [x] Status Indicators
     - [x] WiFi Status
 
-- [ ] WiFi
+- [x] WiFi
   - [x] Connect to Internet
   - [x] Sync Time (NTP) on boot
   - [x] Send Data to Adafruit (HTTP)
