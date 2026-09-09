@@ -466,9 +466,10 @@ void ui_display_btns(){
 
 
 
-#define TOGGLE_IDX 0
-#define UTC_IDX    1
-#define HOME_IDX   2
+#define TOGGLE_IDX  0
+#define UTC_IDX     1
+#define TS_IDX      2
+#define HOME_IDX    3
 
 #define SETT_PADDING 10
 
@@ -489,6 +490,14 @@ void ui_display_btns(){
 #define UTC_TXT_X  UTC_BB_X + 50
 #define UTC_TXT_Y  UTC_BB_Y + 30
 
+
+#define TS_BB_X   UTC_BB_X
+#define TS_BB_Y   UTC_BB_Y + UTC_BB_H + SETT_PADDING
+#define TS_BB_W   TOGGLE_BB_W
+#define TS_BB_H   TOGGLE_BB_H
+
+#define TS_TXT_X TS_BB_X + 40
+#define TS_TXT_Y TS_BB_Y + 30
 
 static void toggle_temp_cb(__unused ButtonPress press){
     program_state.is_celsius = !program_state.is_celsius;
@@ -517,6 +526,11 @@ static void utc_cb(__unused ButtonPress press){
 
    display_draw_box( UTC_BB_X, UTC_BB_Y, UTC_BB_W, UTC_BB_H, BTN_BG);
    display_draw_text(utc_buff, UTC_TXT_X, UTC_TXT_Y, BTN_FG, FONT_12PT);
+}
+
+
+static void time_sync_cb(__unused ButtonPress press){
+    sync_rtc();
 }
 
 static void home_cb(__unused ButtonPress press){
@@ -555,6 +569,14 @@ void ui_draw_settings_screen(){
     display_draw_box( UTC_BB_X, UTC_BB_Y, UTC_BB_W, UTC_BB_H, BTN_BG);
     display_draw_text(utc_buff, UTC_TXT_X, UTC_TXT_Y, BTN_FG, FONT_12PT);
     btn_create(UTC_IDX, utc_cb);
+
+    char* ts_buff = "Time Sync";
+    bounding_box_update(TS_IDX, TS_BB_X,TS_BB_Y, TS_BB_W, TS_BB_H, 0);
+    bounding_len++;
+    display_draw_box(TS_BB_X, TS_BB_Y, TS_BB_W, TS_BB_H, BTN_BG);
+    display_draw_text(ts_buff, TS_TXT_X, TS_TXT_Y, BTN_FG, FONT_12PT);
+    btn_create(TS_IDX, time_sync_cb);
+
 
 
     bounding_box_update(HOME_IDX, HOME_BB_X, HOME_BB_Y, HOME_BB_W, HOME_BB_H, 0);
