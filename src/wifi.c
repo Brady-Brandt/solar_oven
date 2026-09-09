@@ -23,8 +23,10 @@ enum pico_error_codes wifi_init(){
 }
 
 enum pico_error_codes wifi_connect(char* ssid, char* pwd){
-    return cyw43_arch_wifi_connect_timeout_ms(ssid, pwd, CYW43_AUTH_WPA2_AES_PSK, CONNECTION_TIMEOUT);
-
+    enum pico_error_codes err = cyw43_arch_wifi_connect_timeout_ms(ssid, pwd, CYW43_AUTH_WPA2_AES_PSK, CONNECTION_TIMEOUT);
+    if(err != PICO_ERROR_NONE)
+        cyw43_wifi_leave(&cyw43_state, CYW43_ITF_STA);
+    return err;
 }
 
 WifiStatus wifi_status(){
@@ -32,7 +34,6 @@ WifiStatus wifi_status(){
     switch (cyw43_status) {
         case CYW43_LINK_DOWN:
             return WIFI_DOWN;
-
         case CYW43_LINK_JOIN:
             return WIFI_CONNECTED;
 
