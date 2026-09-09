@@ -84,7 +84,7 @@ I also plan on using an API to get the weather to give you an idea on how well t
   - [ ] Settings
     - [x] Toggle °C / °F
     - [x] Set Time (UTC Offset)
-    - [ ] Manual Time Sync
+    - [x] Manual Time Sync
     - [ ] Diagnostic Viewer
     - [ ] Store values in flash
 
