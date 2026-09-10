@@ -14,6 +14,8 @@ add_compile_options(
     -Wall
     -Wextra
     -Wshadow
+    -Wstrict-aliasing
+    -fno-strict-aliasing
 )
 
 add_executable(solar_oven
