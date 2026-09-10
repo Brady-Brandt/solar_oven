@@ -21,17 +21,6 @@
 void display_init();
 
 /**
- * @brief Sets the display background color.
- *
- * Fills the entire display with the specified color value.
- * This operation typically clears any previously drawn graphics.
- *
- * @param color The 16-bit color value used to fill the background.
- *
- */
-void display_background_color(uint16_t color);
-
-/**
  * @brief Draws a filled rectangular box on the display.
  *
  * The box is drawn starting at the specified top-left coordinate
@@ -44,6 +33,20 @@ void display_background_color(uint16_t color);
  * @param color 16-bit color used to fill the box
  */
 void display_draw_box(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint16_t color);
+
+/**
+ * @brief Sets the display background color.
+ *
+ * Fills the entire display with the specified color value.
+ * This operation typically clears any previously drawn graphics.
+ *
+ * @param color The 16-bit color value used to fill the background.
+ *
+ */
+static inline void display_background_color(uint16_t color){
+    display_draw_box(0, 0, DISPLAY_WIDTH, DISPLAY_HEIGHT, color);
+}
+
 
 /**
  * @brief Draws a text string on the display.

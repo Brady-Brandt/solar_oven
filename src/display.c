@@ -25,7 +25,6 @@
 
 #define BUFFER_SIZE 2048
 static uint16_t BUFFER[BUFFER_SIZE];
-static uint16_t buffer_len = 0;
 
 
 static void display_reset(){
@@ -57,7 +56,7 @@ static inline void end_write(){
 }
 
 //sends a command along with its parameters
-static void send_cmd_with_data(uint8_t cmd, uint8_t* data, size_t len){
+static void send_cmd_with_data(uint8_t cmd, const uint8_t* data, size_t len){
     gpio_put(PIN_LCD_DC, 0);
     gpio_put(PIN_LCD_CS, 0);
     spi_write_blocking(spi0,&cmd, 1);
@@ -122,26 +121,6 @@ static void set_address_window(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y
 }
 
 
-
-void display_background_color(uint16_t color){ 
-    set_address_window(0, 0, DISPLAY_WIDTH - 1, DISPLAY_HEIGHT - 1);
-
-    start_write();
-    // LCD expects data in big endian and the pico is little endian
-    color = __builtin_bswap16(color);
-    buffer_len = 0;
-    for(uint32_t i = 0; i < DISPLAY_WIDTH * DISPLAY_HEIGHT; i++) {
-        BUFFER[buffer_len++] = color;
-        if(buffer_len == BUFFER_SIZE - 1){
-            spi_write_blocking(spi0, (uint8_t*)BUFFER, buffer_len * 2);
-            buffer_len = 0;
-        }
-    }
-    if(buffer_len != 0) spi_write_blocking(spi0, (uint8_t*)BUFFER, buffer_len * 2);
-    end_write();
-}
-
-
 void display_draw_box(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint16_t color){
     if(w == 0 || h == 0) return;
 
@@ -153,15 +132,17 @@ void display_draw_box(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint16_t c
 
     color = __builtin_bswap16(color);
 
-    buffer_len = 0;
+    uint16_t buffer_len = 0;
     for(uint32_t i = 0; i < pixels; i++) {
         BUFFER[buffer_len++] = color;
-        if(buffer_len == BUFFER_SIZE - 1){
-            spi_write_blocking(spi0, (uint8_t*)BUFFER, buffer_len * 2);
+        if(buffer_len == BUFFER_SIZE){
+            spi_write_blocking(spi0, (uint8_t*)BUFFER, buffer_len * sizeof(BUFFER[0]));
             buffer_len = 0;
         }
     }
-    if(buffer_len != 0) spi_write_blocking(spi0, (uint8_t*)BUFFER, buffer_len * 2); 
+    if(buffer_len != 0)
+        spi_write_blocking(spi0, (uint8_t*)BUFFER, buffer_len * sizeof(BUFFER[0]));
+
     end_write();
 }
 
