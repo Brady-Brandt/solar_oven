@@ -59,6 +59,9 @@ I also plan on using an API to get the weather to give you an idea on how well t
      - `src/touchscreen.c`
           - Sets up the touchscreen driver
           - Code was converted from [Python to C](https://www.bisonacademy.com/ECE476/Code/28%20gt911.txt)
+      - `src/flash.c`
+          - Reads and writes UTC offset and temperature units to the flash
+          - Allows the program to remember the user's preference when powered down
 
 # Feature Outline
 - [ ] Temperature Sensing
@@ -70,7 +73,7 @@ I also plan on using an API to get the weather to give you an idea on how well t
     - [x] ADC Code
     - [ ] Calibration
 
-- [ ] Display (Touchscreen - ST7796)
+- [x] Display (Touchscreen - ST7796)
   - [x] Graphics Driver
   - [x] Touch Driver (GT911)
 
@@ -81,12 +84,12 @@ I also plan on using an API to get the weather to give you an idea on how well t
     - [x] Current Time Display
     - [ ] ~Weather Display~
 
-  - [ ] Settings
+  - [x] Settings
     - [x] Toggle °C / °F
     - [x] Set Time (UTC Offset)
     - [x] Manual Time Sync
-    - [ ] Diagnostic Viewer
-    - [ ] Store values in flash
+    - [x] Diagnostic Viewer
+    - [x] Store values in flash
 
   - [x] Status Indicators
     - [x] WiFi Status
