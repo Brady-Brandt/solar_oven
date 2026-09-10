@@ -8,13 +8,13 @@
 
 typedef struct {
     uint16_t temperature;
-    float sensor1;
-    float sensor2;
-    uint16_t timer;
+    volatile float sensor1;
+    volatile float sensor2;
+    volatile uint16_t timer;
     WifiStatus wifi_status;
     uint8_t screen;
     uint8_t prev_screen;
-    uint8_t time_synced;
+    volatile uint8_t time_synced;
     int8_t utc_offset;
     uint8_t is_celsius;
 } ProgramState;
