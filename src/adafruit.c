@@ -78,9 +78,11 @@ static HTTPSRequest adafruit_req = {0};
 
 
 
+#ifdef DEBUG
 // Print headers to stdout
-err_t http_client_header_print_fn(__unused httpc_state_t *connection, __unused void *arg, 
-        struct pbuf *hdr, uint16_t hdr_len, __unused uint32_t content_len) {
+err_t http_client_header_print_fn(__unused httpc_state_t *connection, __unused void *arg,
+        struct pbuf *hdr, uint16_t hdr_len, __unused uint32_t content_len)
+{
     debug_info("\nheaders %u\n", hdr_len);
     uint16_t offset = 0;
     while (offset < hdr->tot_len && offset < hdr_len) {
@@ -91,7 +93,9 @@ err_t http_client_header_print_fn(__unused httpc_state_t *connection, __unused v
 }
 
 // Print body to stdout
-err_t http_client_receive_print_fn(__unused void *arg, __unused struct altcp_pcb *conn, struct pbuf *p, err_t err) {
+err_t http_client_receive_print_fn(__unused void *arg, __unused struct altcp_pcb *conn,
+        struct pbuf *p, err_t err)
+{
     debug_info("\ncontent err %d\n", err);
     uint16_t offset = 0;
     while (offset < p->tot_len) {
@@ -101,7 +105,20 @@ err_t http_client_receive_print_fn(__unused void *arg, __unused struct altcp_pcb
     pbuf_free(p);
     return ERR_OK;
 }
+#else
+err_t http_client_header_print_fn(__unused httpc_state_t *connection, __unused void *arg,
+        __unused struct pbuf *hdr, __unused uint16_t hdr_len, __unused uint32_t content_len)
+{
+    return ERR_OK;
+}
 
+err_t http_client_receive_print_fn(__unused void *arg, __unused struct altcp_pcb *conn,
+        __unused struct pbuf *p, __unused err_t err)
+{
+    return ERR_OK;
+}
+
+#endif //DEBUG
 
 static err_t internal_header_fn(httpc_state_t *connection, void *arg, struct pbuf *hdr, uint16_t hdr_len, uint32_t content_len) {
     assert(arg);
