@@ -29,6 +29,7 @@ add_executable(solar_oven
     src/touchscreen.c
     src/adafruit.c
     src/https.c
+    src/flash.c
 )
 
 option(ENABLED_WIFI "Enable WIFI" 0)

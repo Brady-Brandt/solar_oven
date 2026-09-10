@@ -22,6 +22,9 @@ static BoundingBox boxes[MAX_BOUNDING_BOXES];
 static Button buttons[MAX_BUTTONS];
 static volatile uint8_t btns_len = 0;
 
+static uint8_t save_celsius   = 0;
+static int8_t  save_utc_offset = 0;
+
 
 //Radius of the Degrees Symbol
 #define DEGREES_RAD 3
@@ -38,6 +41,10 @@ static void home_cb(__unused ButtonPress press){
     ui_clear(NDSU_GREEN);
     program_state.prev_screen = program_state.screen;
     program_state.screen = HOME_SCREEN;
+    if(save_celsius != program_state.is_celsius
+            || save_utc_offset != program_state.utc_offset){
+        save_data_to_flash();
+    }
     ui_display_btns();
 }
 
@@ -382,6 +389,8 @@ static void more_cb(__unused ButtonPress press){
     program_state.prev_screen = program_state.screen;
     program_state.screen = SETTINGS_SCREEN;
     program_state.timer |= 1 << 15; //stop timer if it is running
+    save_celsius = program_state.is_celsius;
+    save_utc_offset = program_state.utc_offset;
     ui_clear(NDSU_GREEN);
     ui_draw_settings_screen();
 }

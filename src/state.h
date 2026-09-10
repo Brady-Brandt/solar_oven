@@ -32,3 +32,18 @@ extern ProgramState program_state;
 #define time_is_paused() (program_state.timer >> 15)
 #define time_unpause()   (program_state.timer ^= (1 << 15))
 #define time_is_up()    ((program_state.timer & TIMER_MASK) == 0)
+
+
+/*
+ * @brief Writes data from program state to flash
+ *
+ *
+ */
+void save_data_to_flash();
+
+/*
+ * @brief Sets the program state to values in the flash if valid
+ *
+ *
+ */
+void get_data_from_flash();

@@ -30,7 +30,6 @@ static bool update_timer(__unused repeating_timer_t *rt){
 
 
 int main() {
-    program_state.utc_offset = -5;
     rtc_init();
     debug_init();
     touchscreen_init();
@@ -47,9 +46,8 @@ int main() {
             debug_err("Failed to Connect to Wifi\n");
         }
     }
-
+    get_data_from_flash();
     sensors_init();
-
     display_draw_text("WIFI: ", 5, TASKBAR_Y, NDSU_YELLOW, FONT_9PT);
     sync_rtc();
 
