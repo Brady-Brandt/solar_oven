@@ -48,12 +48,11 @@ typedef struct {
 void ui_clear(uint16_t bg);
 
 /**
- * @brief Draws the all 3 temperature values
+ * @brief Draws the a screen with sensor data useful for debugging
  *
- * This function displays all 3 temperature readings to the screen
  *
  */
-void ui_draw_temperature_full();
+void ui_draw_diagnostics_screen();
 
 /**
  * @brief Updates the time 

@@ -69,9 +69,13 @@ int main() {
     while (1){
         //debug_info("Monostable: %f°C\n", program_state.sensor1);
         //debug_info("ADC: %f°C\n", program_state.sensor2);
-        if(program_state.screen == HOME_SCREEN){
+
+        // settings screen doesn't need to be included here since its contents are static
+        if(program_state.screen == HOME_SCREEN)
             ui_draw_timer_and_temp();
-        }
+        else if (program_state.screen == DIAGNOSTICS_SCREEN)
+            ui_draw_diagnostics_screen();
+
         ui_display_wifi_status();
         ui_display_time();
         ui_check_btns();

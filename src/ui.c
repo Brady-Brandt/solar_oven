@@ -26,6 +26,21 @@ static volatile uint8_t btns_len = 0;
 //Radius of the Degrees Symbol
 #define DEGREES_RAD 3
 
+#define HOME_BB_X 420
+#define HOME_BB_Y   0
+#define HOME_BB_W  60
+#define HOME_BB_H  45
+
+#define HOME_TXT_X 430
+#define HOME_TXT_Y  30
+
+static void home_cb(__unused ButtonPress press){
+    ui_clear(NDSU_GREEN);
+    program_state.prev_screen = program_state.screen;
+    program_state.screen = HOME_SCREEN;
+    ui_display_btns();
+}
+
 static void bounding_box_create_text(uint8_t idx, uint16_t x, uint16_t y, char* txt, FontSize font_size){
     boxes[idx].x = x;
     boxes[idx].y = y;
@@ -96,43 +111,65 @@ static inline void num_to_string(uint16_t num, char str[4]){
     str[3] = 0;
 }
 
-#define S1_IDX 3
-#define S2_IDX 4
-void ui_draw_temperature_full() {
+void ui_draw_diagnostics_screen() {
+    static uint16_t prev_temp1 = -1;
+    static uint16_t prev_temp2 = -1;
+
+    #define S1_IDX   3
+    #define S2_IDX   4
+    #define DHOME_IDX 5
     uint8_t padding = 25;
 
     char s1_str[4],s2_str[4];
 
-    num_to_string(program_state.sensor1, s1_str);
-    num_to_string(program_state.sensor2, s2_str);
+    // keep the temperature in celsius for now
+    // probably best for diagnostics
+    uint16_t temp1 = program_state.sensor1;
+    uint16_t temp2 = program_state.sensor2;
+
+    num_to_string(temp1, s1_str);
+    num_to_string(temp2, s2_str);
 
     //this branch is almost always taken
     if(__builtin_expect(bounding_len != 0, 1)){
-        //clear out old temperature/time
-        bounding_box_clear_text(S1_IDX, NDSU_GREEN);
-        bounding_box_clear_text(S2_IDX, NDSU_GREEN);
-        //update new bounding boxes
-        bounding_box_update_text(S1_IDX, s1_str, FONT_12PT);
-        bounding_box_update_text(S2_IDX, s2_str, FONT_12PT);
+        //clear out old temperature
+        if(temp1 != prev_temp1){
+            bounding_box_clear_text(S1_IDX, NDSU_GREEN);
+            bounding_box_update_text(S1_IDX, s1_str, FONT_12PT);
+
+            bounding_box_draw_text(S1_IDX, s1_str, NDSU_YELLOW, FONT_12PT);
+            bounding_box_draw_degrees_symbol(S1_IDX, DEGREES_RAD, NDSU_YELLOW);
+        }
+        //adc is going to need something to reduce flicker
+        if(temp2 != prev_temp2){
+            bounding_box_clear_text(S2_IDX, NDSU_GREEN);
+            bounding_box_update_text(S2_IDX, s2_str, FONT_12PT);
+
+            bounding_box_draw_text(S2_IDX, s2_str, NDSU_YELLOW, FONT_12PT);
+            bounding_box_draw_degrees_symbol(S2_IDX, DEGREES_RAD, NDSU_YELLOW);
+        }
     } else{
-        bounding_box_create_text(0, 20, 100, "Temp Sensor 1:", FONT_12PT);
-        bounding_box_create_text(1, 20, 140, "Temp Sensor 2:", FONT_12PT);
-
-        bounding_box_draw_text(0, "Temp Sensor 1:", NDSU_YELLOW, FONT_12PT);
-        bounding_box_draw_text(1, "Temp Sensor 2:", NDSU_YELLOW, FONT_12PT);
-
-
+        bounding_box_create_text(0, 20, 100, "Oven Temp Sensor 1:", FONT_12PT);
+        bounding_box_create_text(1, 20, 140, "Oven Temp Sensor 2:", FONT_12PT);
+        bounding_box_draw_text(0, "Oven Temp Sensor 1:", NDSU_YELLOW, FONT_12PT);
+        bounding_box_draw_text(1, "Oven Temp Sensor 2:", NDSU_YELLOW, FONT_12PT);
         uint16_t xoffset = padding + boxes[0].w;
         bounding_box_create_text(S1_IDX, xoffset, 100, s1_str, FONT_12PT);
         bounding_box_create_text(S2_IDX, xoffset, 140, s2_str, FONT_12PT);
+        bounding_box_draw_text(S1_IDX, s1_str, NDSU_YELLOW, FONT_12PT);
+        bounding_box_draw_degrees_symbol(S1_IDX, DEGREES_RAD, NDSU_YELLOW);
+        bounding_box_draw_text(S2_IDX, s2_str, NDSU_YELLOW, FONT_12PT);
+        bounding_box_draw_degrees_symbol(S2_IDX, DEGREES_RAD, NDSU_YELLOW);
+
+        bounding_box_update(DHOME_IDX, HOME_BB_X, HOME_BB_Y, HOME_BB_W, HOME_BB_H, 0);
+        bounding_len++;
+        display_draw_box(HOME_BB_X, HOME_BB_Y, HOME_BB_W, HOME_BB_H, NDSU_YELLOW);
+        display_draw_text("Home", HOME_TXT_X, HOME_TXT_Y, 0, FONT_9PT);
+        btn_create(DHOME_IDX, home_cb);
+
     }
-
-
-    bounding_box_draw_text(S1_IDX, s1_str, NDSU_YELLOW, FONT_12PT);
-    bounding_box_draw_degrees_symbol(S1_IDX, DEGREES_RAD, NDSU_YELLOW);
-
-    bounding_box_draw_text(S2_IDX, s2_str, NDSU_YELLOW, FONT_12PT);
-    bounding_box_draw_degrees_symbol(S2_IDX, DEGREES_RAD, NDSU_YELLOW); 
+    prev_temp1 = temp1;
+    prev_temp2 = temp2;
 }
 
 #define TIME_X 385
@@ -227,7 +264,7 @@ void ui_draw_timer_and_temp() {
     static uint16_t prev_temp = 0;
     static uint16_t prev_timer = 0;
 
-    float ftemp = (program_state.sensor1 + program_state.sensor1) / 2.0f;
+    float ftemp = (program_state.sensor1 + program_state.sensor2) / 2.0f;
     //data sent to adafruit will always be in fahrenheit
     program_state.temperature = (uint16_t)roundf(ftemp * 1.8f + 32.0f);
     uint16_t temp = (program_state.is_celsius) ? (uint16_t)roundf(ftemp) : program_state.temperature;
@@ -403,17 +440,6 @@ void ui_check_btns(){
 #define BTN_BG NDSU_YELLOW
 #define BTN_FG 0
 
-
-#define HOME_BB_X 420
-#define HOME_BB_Y   0
-#define HOME_BB_W  60
-#define HOME_BB_H  45
-
-#define HOME_TXT_X 430
-#define HOME_TXT_Y  30
-
-
-
 void ui_display_btns(){
     bounding_box_create_text(PLUS_IDX, 130, 250, "+", FONT_24PT);
 
@@ -469,7 +495,8 @@ void ui_display_btns(){
 #define TOGGLE_IDX  0
 #define UTC_IDX     1
 #define TS_IDX      2
-#define HOME_IDX    3
+#define DIAG_IDX    3
+#define HOME_IDX    4
 
 #define SETT_PADDING 10
 
@@ -498,6 +525,15 @@ void ui_display_btns(){
 
 #define TS_TXT_X TS_BB_X + 40
 #define TS_TXT_Y TS_BB_Y + 30
+
+#define DIAG_BB_X   TS_BB_X
+#define DIAG_BB_Y   TS_BB_Y + TS_BB_H + SETT_PADDING
+#define DIAG_BB_W   TOGGLE_BB_W
+#define DIAG_BB_H   TOGGLE_BB_H
+
+#define DIAG_TXT_X DIAG_BB_X + 30
+#define DIAG_TXT_Y DIAG_BB_Y + 30
+
 
 static void toggle_temp_cb(__unused ButtonPress press){
     program_state.is_celsius = !program_state.is_celsius;
@@ -533,13 +569,12 @@ static void time_sync_cb(__unused ButtonPress press){
     sync_rtc();
 }
 
-static void home_cb(__unused ButtonPress press){
+static void diagnostics_cb(__unused ButtonPress press){
     ui_clear(NDSU_GREEN);
     program_state.prev_screen = program_state.screen;
-    program_state.screen = HOME_SCREEN;
-    ui_display_btns();
+    program_state.screen = DIAGNOSTICS_SCREEN;
+    ui_draw_diagnostics_screen();
 }
-
 
 void ui_draw_settings_screen(){
     char toggle_buff[9] = "Toggle ";
@@ -577,7 +612,11 @@ void ui_draw_settings_screen(){
     display_draw_text(ts_buff, TS_TXT_X, TS_TXT_Y, BTN_FG, FONT_12PT);
     btn_create(TS_IDX, time_sync_cb);
 
-
+    bounding_box_update(DIAG_IDX, DIAG_BB_X,DIAG_BB_Y, DIAG_BB_W, DIAG_BB_H, 0);
+    bounding_len++;
+    display_draw_box(DIAG_BB_X, DIAG_BB_Y, DIAG_BB_W, DIAG_BB_H, BTN_BG);
+    display_draw_text("Diagnostics", DIAG_TXT_X, DIAG_TXT_Y, BTN_FG, FONT_12PT);
+    btn_create(DIAG_IDX, diagnostics_cb);
 
     bounding_box_update(HOME_IDX, HOME_BB_X, HOME_BB_Y, HOME_BB_W, HOME_BB_H, 0);
     bounding_len++;

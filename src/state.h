@@ -19,8 +19,9 @@ typedef struct {
     uint8_t is_celsius;
 } ProgramState;
 
-#define HOME_SCREEN     0
-#define SETTINGS_SCREEN 1
+#define HOME_SCREEN        0
+#define SETTINGS_SCREEN    1
+#define DIAGNOSTICS_SCREEN 2
 
 
 extern ProgramState program_state;
