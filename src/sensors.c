@@ -13,6 +13,9 @@
 #include <math.h>
 
 
+#define TIMER_PERIOD_US ((uint32_t)((1/50.0) * 1000000))
+static uint32_t next_time = 0;
+
 #define sm 0
 #define CAPACITANCE (1.1 * 100*1e-9)
 
@@ -51,9 +54,13 @@ static void pio0_irq0_handler() {
 }
 
 static void adc_irq_handler(){
-    uint16_t reading = adc_fifo_get();
+    hw_clear_bits(&PICO_DEFAULT_TIMER_INSTANCE()->intr, 1 << 2);
+    adc_select_input(2);
+    uint16_t reading = adc_read();
     float resistance = ADC_TO_RESISTANCE(reading);
     program_state.sensor2 = RESISTANCE_TO_TEMP(resistance);
+    next_time = PICO_DEFAULT_TIMER_INSTANCE()->timelr + TIMER_PERIOD_US;
+    PICO_DEFAULT_TIMER_INSTANCE()->alarm[2] = next_time;
 }
 
 void sensors_init(){
@@ -89,13 +96,13 @@ void sensors_init(){
 
     adc_init();
     adc_gpio_init(PIN_TEMP_ADC);
-    adc_fifo_setup(true, true, 1, false, false);
-    adc_set_clkdiv(65535);
-    irq_set_exclusive_handler(ADC_IRQ_FIFO, adc_irq_handler);
-    irq_set_enabled(ADC_IRQ_FIFO, true);
-    adc_irq_set_enabled(true);
-    adc_select_input(2);
-    adc_run(true);
+    hardware_alarm_claim(2);
+    irq_set_exclusive_handler(TIMER_IRQ_2, adc_irq_handler);
+    irq_set_priority(TIMER_IRQ_2, 0);
+    irq_set_enabled(TIMER_IRQ_2, true);
+    PICO_DEFAULT_TIMER_INSTANCE()->inte |= 1 << 2;
+    next_time = PICO_DEFAULT_TIMER_INSTANCE()->timelr + TIMER_PERIOD_US;
+    PICO_DEFAULT_TIMER_INSTANCE()->alarm[2] = next_time;
 
     debug_info("Clock Speed: %d Hz\n", clock_get_hz(clk_sys));
     debug_info("PIO ENABLED\n");
