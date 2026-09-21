@@ -1,60 +1,51 @@
 #include "touchscreen.h"
+#include "display.h"
 #include "hardware/i2c.h"
 #include "hardware/gpio.h"
 #include "pins.h"
 #include <pico/time.h>
 #include <stdint.h>
 
-#define ADDR          0x5D
 
-#define _COMMAND          0x8040
-#define _CONFIG_VERSION   0x8047
-#define _RESOLUTION_X     0x8048
-#define _RESOLUTION_Y     0x804A
-#define _TOUCH_POINTS     0x804C
-#define _MODULE_SWITCH1   0x804D
-#define _REFRESH_RATE     0x8056
-#define _CONFIG_CHKSUM    0x80FF
-#define _CONFIG_FRESH     0x8100
+#define ADDR          0x38
+#define I2C_BUS       i2c_default
+// -----------------------------------------------------------------------------
+// FT6336 registers
+// -----------------------------------------------------------------------------
+#define FT_DEVICE_MODE        0x00  // Device/mode control register
+#define FT_REG_NUM_FINGER     0x02  // Number of touch points
 
-#define _DATA_BUFFER      0x814E
-#define _POINT_DATA_START 0x8150
+#define FT_TP1_REG            0x03  // First touch-point data address
+#define FT_TP2_REG            0x09  // Second touch-point data address
 
-#define I2C_BUS i2c_default
+#define FT_ID_G_CIPHER_MID    0x9F  // Chip ID, middle byte; default 0x26
+#define FT_ID_G_CIPHER_LOW    0xA0  // Chip ID, low byte
+                                    // 0x01 = FT6336G
+                                    // 0x02 = FT6336U
 
-static void write_reg16_8(uint16_t reg, uint8_t data)
-{
-    uint8_t buf[3];
+#define FT_ID_G_LIB_VERSION   0xA1  // Library/version
 
-    buf[0] = (reg >> 8) & 0xFF;  // reg high byte
-    buf[1] = reg & 0xFF;         // reg low byte
-    buf[2] = data;               // 1-byte value
+#define FT_ID_G_CIPHER_HIGH   0xA3  // Chip ID, high byte; default 0x64
 
-    i2c_write_blocking(I2C_BUS, ADDR, buf, 3, false);
+#define FT_ID_G_MODE          0xA4  // Interrupt-mode control register
+
+#define FT_ID_G_FOCALTECH_ID  0xA8  // FocalTech vendor ID; default 0x11
+
+#define FT_ID_G_THGROUP       0x80  // Touch threshold setting
+
+#define FT_ID_G_PERIODACTIVE  0x88  // Active-period setting
+
+/*
+static void write_reg(uint8_t reg, uint8_t data){
+    uint8_t buf[2];
+    buf[0] = reg;
+    buf[1] = data;
+    i2c_write_blocking(I2C_BUS, ADDR, buf, 2, false);
 }
+*/
 
-
-static void write_reg16_16(uint16_t reg, uint16_t data)
-{
-    uint8_t buf[4];
-
-    buf[0] = (reg >> 8) & 0xFF;
-    buf[1] = reg & 0xFF;
-
-    buf[2] = data & 0xFF;        // low byte first (little endian)
-    buf[3] = (data >> 8) & 0xFF; // high byte
-
-    i2c_write_blocking(I2C_BUS, ADDR, buf, 4, false);
-}
-
-
-static void read(uint16_t reg, uint8_t* data, size_t len){
-    uint8_t regbuf[2];
-
-    regbuf[0] = (reg >> 8) & 0xFF;
-    regbuf[1] = reg & 0xFF;
-
-    i2c_write_blocking(I2C_BUS, ADDR, regbuf, 2, true);
+static void read(uint8_t reg, uint8_t* data, size_t len){
+    i2c_write_blocking(I2C_BUS, ADDR, &reg, 1, true);
     i2c_read_blocking(I2C_BUS, ADDR, data, len, false);
 }
 
@@ -66,6 +57,7 @@ void touchscreen_init(){
     gpio_init(PIN_TOUCH_INT);
     gpio_set_dir(PIN_TOUCH_INT, GPIO_OUT);
     gpio_init(PIN_TOUCH_RESET);
+    gpio_pull_up(PIN_TOUCH_RESET);
     gpio_set_dir(PIN_TOUCH_RESET, GPIO_OUT);
 
     gpio_put(PIN_TOUCH_RESET,0);
@@ -73,53 +65,27 @@ void touchscreen_init(){
     sleep_us(1000);
     gpio_put(PIN_TOUCH_RESET, 1);
     sleep_ms(110);
-
     gpio_set_dir(PIN_TOUCH_INT, GPIO_IN);
-
-    write_reg16_16(_RESOLUTION_X, 480);
-    write_reg16_16(_RESOLUTION_Y, 320);
-    write_reg16_8(_TOUCH_POINTS, 1);
-
-    uint8_t value = 0 << 7 | 1 << 6 | 1 << 3 | 1 << 2 | 1; 
-    write_reg16_8(_MODULE_SWITCH1, value);
-    write_reg16_8(_REFRESH_RATE, 50);
-
-    write_reg16_8(_COMMAND, 0x00);
-
-    uint8_t config[184];
-    read(_CONFIG_VERSION, config, 184);
-    uint8_t sum = 0;
-    for(int i = 0; i < 184; i++){
-        sum += config[i];
-    }
-    sum = ~sum + 1;
-    write_reg16_8(_CONFIG_CHKSUM, sum);
-    write_reg16_8(_CONFIG_FRESH, 1);
 }
 
 
-
 bool touchscreen_get_point(uint16_t* x, uint16_t* y){ 
-    uint8_t status = 0;
-    read(_DATA_BUFFER, &status, 1);
-    if(status & 0x80){
-        uint8_t num_points = status & 0x0F;
-        if(num_points == 0){
-            write_reg16_8(_DATA_BUFFER, 0);
-            goto no_touches;
-        }
-        
-        uint8_t x_res[2], y_res[2];
-        read(_POINT_DATA_START, x_res, 2);
-        read(_POINT_DATA_START + 2, y_res, 2);
+    uint8_t points = 0;
+    // Read number of active touch points
+    read(FT_REG_NUM_FINGER, &points, 1);
+    if(points){
+        //00 = Touch Down
+        //01 = Lift Up
+        //10 = Contact / still touching
+        //11 = reserved
+        uint8_t buff[4];
+        read(FT_TP1_REG,buff,4);
 
-        *x = (x_res[0] | (x_res[1] << 8));
-        *y = (y_res[0] | (y_res[1] << 8));
-        write_reg16_8(_DATA_BUFFER, 0);
+        // seems to default to portrait mode. I need landscape
+        *y = DISPLAY_HEIGHT - (((0xF & buff[0]) << 8) | buff[1]);
+        *x = ((0xF & buff[2]) << 8) | buff[3];
         return true;
     }
-
-no_touches:
     *x = 0;
     *y = 0;
     return false;
