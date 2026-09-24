@@ -26,6 +26,11 @@ enum pico_error_codes wifi_connect(char* ssid, char* pwd){
     enum pico_error_codes err = cyw43_arch_wifi_connect_timeout_ms(ssid, pwd, CYW43_AUTH_WPA2_AES_PSK, CONNECTION_TIMEOUT);
     if(err != PICO_ERROR_NONE)
         cyw43_wifi_leave(&cyw43_state, CYW43_ITF_STA);
+    else{
+        if(cyw43_wifi_pm(&cyw43_state, CYW43_AGGRESSIVE_PM) != 0){
+            debug_err("Failed to set power management");
+        }
+    }
     return err;
 }
 
