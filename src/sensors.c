@@ -12,8 +12,8 @@
 #include <stdint.h>
 #include <math.h>
 
+#define TIMER_PERIOD_US ((uint32_t)((1/10.0) * 1000000))
 
-#define TIMER_PERIOD_US ((uint32_t)((1/50.0) * 1000000))
 static uint32_t next_time = 0;
 
 #define sm 0
@@ -53,11 +53,22 @@ static void pio0_irq0_handler() {
     pio_interrupt_clear(pio0, 0);
 }
 
+static int time_var = 0;
 static void adc_irq_handler(){
     hw_clear_bits(&PICO_DEFAULT_TIMER_INSTANCE()->intr, 1 << 2);
+    time_var++;
+    if(time_var == 10){
+        time_var = 0;
+        if(time_is_up())
+            gpio_xor_mask(1 << PIN_TIMER_BUZZER);
+        else if (time_is_paused())
+            goto read_adc;
+        else
+            program_state.timer--;
+    }
+read_adc:
     adc_select_input(2);
-    uint16_t reading = adc_read();
-    float resistance = ADC_TO_RESISTANCE(reading);
+    float resistance = ADC_TO_RESISTANCE(((float)adc_read()));
     program_state.sensor2 = RESISTANCE_TO_TEMP(resistance);
     next_time = PICO_DEFAULT_TIMER_INSTANCE()->timelr + TIMER_PERIOD_US;
     PICO_DEFAULT_TIMER_INSTANCE()->alarm[2] = next_time;
