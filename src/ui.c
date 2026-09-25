@@ -3,6 +3,7 @@
 #include "debug.h"
 #include "font.h"
 #include "display.h"
+#include "pins.h"
 #include "state.h"
 #include "wifi.h"
 #include "touchscreen.h"
@@ -373,7 +374,7 @@ static void start_stop_cb(__unused ButtonPress press){
     // stop the beeper and put 1 minute back on the timer (basically reset)
     if(time_is_up()){
         program_state.timer = (program_state.timer & (1 << 15)) | 60;
-        gpio_put(13, 0);
+        gpio_put(PIN_TIMER_BUZZER, 0);
     } else if(time_is_paused()){
         add_repeating_timer_ms(5000,adafruit_send_temperatue,
                 NULL, &ada_timer);
