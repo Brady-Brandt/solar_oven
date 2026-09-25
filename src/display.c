@@ -12,13 +12,26 @@
 #include "FreeMono24pt7b.h"
 
 
-#define DISPLAY_SLEEP_OUT 0x11
-#define DISPLAY_ON 0x29
-#define DISPLAY_CASET 0x2A
-#define DISPLAY_RASET 0x2B
-#define DISPLAY_MEM_WRITE 0x2C
-#define DISPLAY_MADCTL 0x36
-#define DISPLAY_INVERSION 0x21
+#define DISPLAY_SLEEP_OUT              0x11
+#define DISPLAY_NORMAL_DISPLAY_MODE    0x13
+#define DISPLAY_INVERSION              0x21
+#define DISPLAY_ON                     0x29
+#define DISPLAY_CASET                  0x2A
+#define DISPLAY_RASET                  0x2B
+#define DISPLAY_MEM_WRITE              0x2C
+#define DISPLAY_MADCTL                 0x36
+#define DISPLAY_INTEFACE_MODE_CTRL     0xB0
+#define DISPLAY_FRMCTR1                0xB1
+#define DISPLAY_INVERSION_CTRL         0xB4
+#define DISPLAY_BANKING_PORCH_CTRL     0xB5
+#define DISPLAY_FUNCTION_CTRL          0xB6
+#define DISPLAY_ENTRY_MODE_SET         0xB7
+#define DISPLAY_PWR3                   0xC2
+#define DISPLAY_VCOM_CTRL              0xC5
+#define DISPLAY_POSTIVE_GAMMA_CTRL     0xE0
+#define DISPLAY_NEGATIVE_GAMMA_CTRL    0xE1
+#define DISPLAY_DOCA                   0xE8
+#define DISPLAY_CMD_SET_CTRL           0xF0
 
 
 #define SPI_BAUDRATE 35000000
@@ -91,23 +104,101 @@ void display_init(){
     gpio_set_dir(PIN_LCD_RESET, GPIO_OUT);
 
     display_reset();
-    send_cmd(DISPLAY_SLEEP_OUT);
-    sleep_ms(150);
-
-    send_cmd(DISPLAY_ON);
-    sleep_ms(10);
-
-    send_cmd(DISPLAY_INVERSION);
-    sleep_ms(10);
-
-    //16 bit rgb
-    send_cmd(0x3A);
-    write_byte(0x55);
-    sleep_ms(10);
+    send_cmd(DISPLAY_CMD_SET_CTRL);
+    write_byte(0xC3);
+    send_cmd(DISPLAY_CMD_SET_CTRL);
+    write_byte(0x96);
 
     send_cmd(DISPLAY_MADCTL);
-    write_byte(0x28);
-    sleep_ms(10);
+    write_byte((1<<3)|(1<<5));
+
+    // not defined in the data sheet
+    // using a lot of the initialization code provided by the manufacturer
+    send_cmd(0x3A);
+    write_byte(0x05);
+
+    send_cmd(DISPLAY_INTEFACE_MODE_CTRL);
+    write_byte(0x80);
+
+    send_cmd(DISPLAY_FUNCTION_CTRL);
+    write_byte(0x00);
+    write_byte(0x02);
+
+    send_cmd(DISPLAY_BANKING_PORCH_CTRL);
+    write_byte(0x02);
+    write_byte(0x03);
+    write_byte(0x00);
+    write_byte(0x04);
+
+    send_cmd(DISPLAY_FRMCTR1);
+    write_byte(0x80);
+    write_byte(0x10);
+
+    send_cmd(DISPLAY_INVERSION_CTRL);
+    write_byte(0x00);
+
+    send_cmd(DISPLAY_ENTRY_MODE_SET);
+    write_byte(0xC6);
+
+    send_cmd(DISPLAY_VCOM_CTRL);
+    write_byte(0x1C);
+
+    // not defined in the data sheet
+    send_cmd(0xE4);
+    write_byte(0x31);
+
+    send_cmd(DISPLAY_DOCA);
+    write_byte(0x40);
+    write_byte(0x8A);
+    write_byte(0x00);
+    write_byte(0x00);
+    write_byte(0x29);
+    write_byte(0x19);
+    write_byte(0xA5);
+    write_byte(0x33);
+
+    send_cmd(DISPLAY_PWR3);
+    // not defined in the datasheet
+    send_cmd(0xA7);
+    send_cmd(DISPLAY_POSTIVE_GAMMA_CTRL);
+    write_byte(0xF0);
+    write_byte(0x09);
+    write_byte(0x13);
+    write_byte(0x12);
+    write_byte(0x12);
+    write_byte(0x2B);
+    write_byte(0x3C);
+    write_byte(0x44);
+    write_byte(0x4B);
+    write_byte(0x1B);
+    write_byte(0x18);
+    write_byte(0x17);
+    write_byte(0x1D);
+    write_byte(0x21);
+
+    send_cmd(DISPLAY_NEGATIVE_GAMMA_CTRL);
+    write_byte(0xF0);
+    write_byte(0x09);
+    write_byte(0x13);
+    write_byte(0x0C);
+    write_byte(0x0D);
+    write_byte(0x27);
+    write_byte(0x3B);
+    write_byte(0x44);
+    write_byte(0x4D);
+    write_byte(0x0B);
+    write_byte(0x17);
+    write_byte(0x17);
+    write_byte(0x1D);
+    write_byte(0x21);
+
+    send_cmd(DISPLAY_CMD_SET_CTRL);
+    write_byte(0x3C);
+    send_cmd(DISPLAY_CMD_SET_CTRL);
+    write_byte(0x69);
+    send_cmd(DISPLAY_NORMAL_DISPLAY_MODE);
+    send_cmd(DISPLAY_SLEEP_OUT);
+    send_cmd(DISPLAY_ON);
 }
 
 
