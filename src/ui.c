@@ -389,7 +389,6 @@ static void start_stop_cb(__unused ButtonPress press){
 static void more_cb(__unused ButtonPress press){
     program_state.prev_screen = program_state.screen;
     program_state.screen = SETTINGS_SCREEN;
-    program_state.timer |= 1 << 15; //stop timer if it is running
     save_celsius = program_state.is_celsius;
     save_utc_offset = program_state.utc_offset;
     ui_clear(NDSU_GREEN);
