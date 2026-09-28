@@ -369,7 +369,7 @@ static void decrement_time_cb(ButtonPress press){
 
 
 
-static repeating_timer_t ada_timer;
+repeating_timer_t ada_timer;
 static void start_stop_cb(__unused ButtonPress press){
     // stop the beeper and put 1 minute back on the timer (basically reset)
     if(time_is_up()){

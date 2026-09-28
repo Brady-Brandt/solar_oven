@@ -77,6 +77,8 @@ err_t httpc_get_file_dns(const char* server_name, u16_t port, const char* uri, c
 #endif //ENABLE_WIFI
 
 #include <pico/time.h>
+
+extern repeating_timer_t ada_timer;
 /*
  * @brief Sends current temperature to adafruit io
  *

@@ -6,6 +6,7 @@
 #include "font.h"
 #include "pico/stdlib.h"
 #include "hardware/gpio.h"
+#include "hardware/watchdog.h"
 #include "hardware/rtc.h"
 #include "debug.h"
 #include "sensors.h"
@@ -14,10 +15,19 @@
 #include "state.h"
 #include "pins.h"
 #include "touchscreen.h"
+#include "https.h"
 
 ProgramState program_state = {0};
 
 int main() {
+    program_state.timer =  1 << 15 | 60;
+
+    if(watchdog_enable_caused_reboot()){
+        program_state.timer = *(uint32_t*)(WATCHDOG_BASE + WATCHDOG_SCRATCH0_OFFSET);
+        if(!time_is_paused())
+            add_repeating_timer_ms(5000,adafruit_send_temperatue,NULL,&ada_timer);
+    }
+
     rtc_init();
     debug_init();
     touchscreen_init();
@@ -38,10 +48,10 @@ int main() {
     sensors_init();
     display_draw_text("WIFI: ", 5, TASKBAR_Y, NDSU_YELLOW, FONT_9PT);
     sync_rtc();
+    watchdog_enable(3000, true);
 
     program_state.sensor1 = 0;
     program_state.sensor2 = 50;
-    program_state.timer =  1 << 15 | 60;
 
     // init buzzer timer
     gpio_init(PIN_TIMER_BUZZER);
@@ -50,7 +60,9 @@ int main() {
 
     ui_display_btns();
     program_state.temperature = 68;
+
     while (1){
+        watchdog_update();
         //debug_info("Monostable: %f°C\n", program_state.sensor1);
         //debug_info("ADC: %f°C\n", program_state.sensor2);
 

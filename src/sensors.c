@@ -5,6 +5,7 @@
 #include "hardware/clocks.h"
 #include "pulsewidth.pio.h"
 #include "hardware/adc.h"
+#include "hardware/watchdog.h"
 #include "state.h"
 #include "pins.h"
 #include <hardware/timer.h>
@@ -65,6 +66,7 @@ static void adc_irq_handler(){
             goto read_adc;
         else
             program_state.timer--;
+        *(uint32_t*)(WATCHDOG_BASE + WATCHDOG_SCRATCH0_OFFSET) = program_state.timer;
     }
 read_adc:
     adc_select_input(2);
