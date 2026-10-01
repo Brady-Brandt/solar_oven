@@ -349,3 +349,11 @@ void display_draw_circle(int x0, int y0, int r, uint16_t color){
         }
     }
 }
+
+
+void display_draw_image(const uint16_t* data, uint16_t x, uint16_t y, uint16_t w, uint16_t h){
+    set_address_window(x,y,x + w - 1,y + h - 1);
+    start_write();
+    spi_write_blocking(spi0, (uint8_t*)data, 2 * w * h);
+    end_write();
+}

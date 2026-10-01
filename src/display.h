@@ -86,3 +86,15 @@ void display_get_text_size(char* text, FontSize size, uint16_t* w, uint8_t* h, u
  * @param color The color of the circle outline
  */
 void display_draw_circle(int x0, int y0, int r, uint16_t color);
+
+
+/**
+ * @brief Draws an image to the screen
+ *
+ * @param data Big endian RGB565 data to be drawn
+ * @param x X coordinate of the top-left corner of the image in pixels.
+ * @param y Y coordinate of the top-left corner of the image in pixels.
+ * @param w Width of the image in pixels.
+ * @param h Height of the image in pixels.
+ */
+void display_draw_image(const uint16_t* data, uint16_t x, uint16_t y, uint16_t w, uint16_t h);
